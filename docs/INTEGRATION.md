@@ -105,9 +105,9 @@
 | **M1（已完成 2026-11-07）** | Midas 內力＋.mct → 設計工具（柱、梁、基樁） | `tests/midas.test.js` 10 項（解析、單位、正負號、控制組合）、`tests/midas-ui.test.js` 3 項（貼表、選群組、套用、批次建立構件、計算書內力來源、案件檔清理）；教學與常見問題補文字（截圖待合併 main 時重建，之後可在 build.js 加拍匯入視窗） |
 | **M2（已完成 2026-11-07）** | 版（Plate Force、Wood-Armer） | `midas.test.js` 加 4 項（Wood-Armer 六種情況手算、每公尺版帶單位換算、`*THICKNESS`、x／y 向控制組合與膜力警示）；`midas-ui.test.js` 加 1 項 |
 | M3 | 配筋 → Midas MCT | 使用者在 Midas 2022 實機匯入成功（實機驗證） |
-| M4 | StructAudit-AI 讀內力來源 | 範例計算書審查報告引用來源 |
-| M5 | midas-curve-gen 群組命名指引 | README／SPEC 更新 |
-| M6 | 書稿新章 | 編譯 0 overfull、0 undefined，交付 PDF |
+| **M4（已完成 2026-11-07）** | StructAudit-AI 讀內力來源 | 擷取計算書「內力來源」列入表頭、案件檔 loadsrc 交給 Agent（含匯入後是否修改）、外審核對清單；示範檔 `examples/sample_P1_midas_*`；測試 4 項 |
+| **M5（已完成 2026-11-07）** | midas-curve-gen 群組命名指引 | README「接到 RC 構件設計工具」、SPEC §8 下游耦合註記 |
+| **M6（已完成 2026-11-07）** | 書稿新章 | 第 66 章（`pC_c9.tex`）；附錄 E 新增 A26、B26～B29；508 頁，0 overfull、0 undefined |
 
 ## 6. 待實機驗證（使用者尚未提供 Midas 範例檔，先依公開資料實作）
 
