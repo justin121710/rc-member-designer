@@ -88,6 +88,8 @@ test('柱：正負號、頂底配對、控制組合、包絡排除', () => {
   // cLCB2 在 102 J 端（中間節點 3）有 Pu 最大（830）→ 另列中間控制點
   assert.ok(r.loads.some(l => l.name === 'cLCB2 @E102-J' && l.pos === undefined));
   assert.ok(r.ctrl.some(c => c.why === 'P_u 最大' && c.load === 'cLCB2' && c.tag === 'E102-J'));
+  assert.ok(!r.ctrl.some(c => c.why === 'M_uy 負向最大'), 'M_uy 全為正：不列負向控制');
+  assert.ok(r.ctrl.some(c => c.why === 'P_u 最小' && c.load === 'cLCB1' && c.v === -750));
   // x／y 對調
   const s = M.columnLoads(t, [101, 102, 103], m, {loads: ['cLCB2'], swap: true});
   near(s.loads.find(l => l.pos === 'top').Mux, 40, 1e-9, '對調後 Mux');

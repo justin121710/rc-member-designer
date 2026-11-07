@@ -294,7 +294,7 @@ const MidasIO = (() => {
       pick(f => f.Muy, 'M_uy 正向最大'), pick(f => -f.Muy, 'M_uy 負向最大'),
       pick(f => Math.hypot(f.Mux, f.Muy), '合彎矩最大'),
       pick(f => Math.abs(f.Vux), '|V_ux| 最大'), pick(f => Math.abs(f.Vuy), '|V_uy| 最大'), pick(f => Math.abs(f.Tu), '|T_u| 最大'),
-    ].filter(c => c && Math.abs(c.v) > 1e-9);
+    ].filter(c => c && (c.why === 'P_u 最小' ? Math.abs(c.v) > 1e-9 : c.v > 1e-9));   // 正向／負向：該方向確實出現才列（P_u 最小保留負值＝最小壓力）
     const loadsOrder = table.loads.filter(l => sel.has(l));
     const ctrlLoads = opts.all ? loadsOrder : loadsOrder.filter(l => crit.some(c => c.x.r.load === l));
     const out = [], src = [];
