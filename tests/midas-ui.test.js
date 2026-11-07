@@ -93,3 +93,18 @@ test('版（M2）：Plate Force 在柱模組提示改用梁／版模組；梁／
   const rp = await page.evaluate(() => { buildBeamReport(BMODEL || renderBeam()); return document.getElementById('report').innerText; });
   assert.match(rp, /Wood-Armer/); assert.match(rp, /S1_DECK/);
 });
+
+test('從載重組合視窗開啟：匯入視窗在最上層可操作，Esc 只關匯入視窗', async () => {
+  await page.evaluate(() => { document.querySelectorAll('.ov-shell.open').forEach(o => o.classList.remove('open')); document.getElementById('tabPylon').click(); });
+  await page.click('#btnLoads'); await page.waitForTimeout(300);
+  assert.equal(await page.evaluate(() => document.getElementById('loadOv').classList.contains('open')), true);
+  await page.click('#btnMidas'); await page.waitForTimeout(200);
+  await page.click('#midTblRead', {timeout: 3000});      // 被下層視窗遮住時會逾時
+  const top = await page.evaluate(() => { const b = document.getElementById('midTblRead').getBoundingClientRect();
+    return document.elementFromPoint(b.left + b.width/2, b.top + b.height/2).id; });
+  assert.equal(top, 'midTblRead');
+  await page.keyboard.press('Escape'); await page.waitForTimeout(100);
+  const st = await page.evaluate(() => ({mid: document.getElementById('midOv').classList.contains('open'), load: document.getElementById('loadOv').classList.contains('open')}));
+  assert.deepEqual(st, {mid: false, load: true});
+  await page.keyboard.press('Escape');
+});

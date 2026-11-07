@@ -7,3 +7,5 @@ docs/tutorial/build.js
 docs/tutorial/inputs.txt
 core/rc-core.js
 core/midas-io.js
+tests/fixtures/midas_pier.mct
+tests/fixtures/midas_beam_force.txt

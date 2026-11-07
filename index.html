@@ -512,6 +512,7 @@ body .tb-setup:hover{border-color:var(--acc);background:var(--acc-soft)}
 .imp-foot{display:flex;align-items:center;gap:8px;padding:11px 16px;
   border-top:1px solid var(--line);flex-shrink:0}
 .imp-grow{flex-grow:1}
+#midOv{z-index:80}   /* 在載重組合視窗（.ov-shell 60）與開場精靈（70）之上、確認視窗（90）之下 */
 .mid-step{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px}
 .mid-step > b{margin-right:6px}
 .mid-info{color:var(--dim)}
@@ -10567,7 +10568,7 @@ function pinFit(mod){
   document.getElementById('memClose').onclick = () => document.getElementById('memOv').classList.remove('open');
   document.getElementById('memOv').addEventListener('click', e => { if(e.target.id==='memOv') e.target.classList.remove('open'); });
   /* M15：構件清單、載重組合、圖說匯入視窗之對話框行為——開啟時焦點移入、Tab 不跑到背景、Esc 關閉、關閉後焦點回到原按鈕 */
-  { const OVS = ['memOv','loadOv','impOv'], opener = {};
+  { const OVS = ['midOv','memOv','loadOv','impOv'], opener = {};   // midOv 在 loadOv 之上開啟，排第一（Tab 循環以最上層為準）
     const focusables = el => [...el.querySelectorAll('button,[href],input:not([type=hidden]),select,textarea,[tabindex]:not([tabindex="-1"])')]
       .filter(x => !x.disabled && x.offsetParent !== null);
     for(const id of OVS){ const ov = document.getElementById(id); if(!ov) continue;
@@ -11014,7 +11015,8 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   $('bMidas').onclick = () => open('beam');
   $('midClose').onclick = close;
   ov.addEventListener('click', e => { if(e.target===ov) close(); });
-  document.addEventListener('keydown', e => { if(e.key==='Escape' && ov.classList.contains('open') && !$('askOv').classList.contains('open')) close(); });
+  // 捕獲階段處理 Esc 並停止傳遞：只關本視窗，不連帶關掉下層的載重組合視窗或取消開場精靈
+  window.addEventListener('keydown', e => { if(e.key==='Escape' && ov.classList.contains('open') && !$('askOv').classList.contains('open')){ e.stopPropagation(); e.preventDefault(); close(); } }, true);
   $('midMctFile').onchange = e => { readMct(e.target.files[0]).catch(err => { $('midMctInfo').textContent = '讀取失敗：' + err.message; }); };
   $('midTblRead').onclick = () => { SRC = $('midTblBox').value; ST.tblName = ''; readTable(); };
   $('midTblFile').onchange = async e => {

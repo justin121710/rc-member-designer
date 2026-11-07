@@ -208,7 +208,9 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
 
 <section class="chap">
   <h3>從 Midas 匯入</h3>
-  <p>載重表的「<b>從 Midas 匯入</b>」直接讀 Midas Civil 的結果表格，依結構群組把元素歸到構件、換算成 tf、tf·m，並挑出控制組合（整體流程見 <code>docs/INTEGRATION.md</code>）。</p>
+  <p>載重表的「<b>從 Midas 匯入</b>」直接讀 Midas Civil 的結果表格，依結構群組把元素歸到構件、換算成 tf、tf·m，並挑出控制組合（整體流程見 <code>docs/INTEGRATION.md</code>）。圖 8a、8b 為橋墩 P1 的例子（模型與內力表即 <code>tests/fixtures</code> 的範例檔）。</p>
+  <figure><img src="img/08b-midas.png" style="max-height:120mm"><figcaption>圖 8a　從 Midas 匯入：<span class="n">1</span> 模型 .mct、<span class="n">2</span> 貼上內力表、<span class="n">3</span> 讀取內力表、<span class="n">4</span> 勾選結構群組</figcaption></figure>
+  <figure><img src="img/08c-midas-prev.png" style="max-height:120mm"><figcaption>圖 8b　預覽：<span class="n">1</span> 載重勾選（單一工況、包絡預設不勾）、<span class="n">2</span> 控制組合與來源、<span class="n">3</span> 建立到構件清單、<span class="n">4</span> 套用到目前構件</figcaption></figure>
   <ol>
     <li><span class="n">1</span><b>模型 .mct</b>（建議）：midas-curve-gen 產生的 .mct，或 Midas 匯出的完整模型。工具用它的結構群組歸屬元素、用節點高程判定構件頂底，並讀斷面尺寸與單位。</li>
     <li><span class="n">2</span><b>內力表</b>：在 Midas 的 Results &gt; Result Tables &gt; Beam &gt; Force 表格上全選複製（含標題列）貼上，或選 .txt／.csv／.xlsx 檔，按「讀取內力表」。單位取標題列括號；沒有時用 .mct 的 <code>*UNIT</code> 或手選。</li>

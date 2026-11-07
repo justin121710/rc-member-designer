@@ -104,6 +104,20 @@ async function screenshots(browser, base){
   await shot('07-csv-ask', [['#askAct',1]]);
   await page.click('#askAct button:has-text("取代全部")'); await W8(500);
   await shot('08-csv-done', [['#csvMsg',1],['#loadTbl tbody',2]]);
+  /* 5b 從 Midas 匯入（tests/fixtures 的 P1 墩柱；截圖後不套用，C1 的載重維持上面 CSV 的結果） */
+  await page.click('#btnMidas'); await W8(400);
+  { const FIX = path.join(ROOT, 'tests', 'fixtures');
+    await page.setInputFiles('#midMctFile', path.join(FIX, 'midas_pier.mct'));
+    await page.waitForFunction(() => /結構群組/.test(document.getElementById('midMctInfo').textContent));
+    await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'midas_beam_force.txt'), 'utf8'));
+    await page.click('#midTblRead'); await W8(300);
+    await page.check('#midGrpWrap input[data-g="0"]'); await W8(400); }
+  const midClip = async () => { const d = await box('#midOv .imp-dlg'); const y = Math.max(0, d.y-4); return {x:d.x-4, y, width:d.width+8, height:Math.min(H-y, d.height+8)}; };
+  await page.evaluate(() => { document.getElementById('midTblBox').scrollTop = 0; document.querySelector('#midOv .imp-body').scrollTop = 0; });
+  await shot('08b-midas', [['#midMctFile',1],['#midTblBox',2],['#midTblRead',3],['#midGrpWrap',4]], await midClip());
+  await page.evaluate(() => { const b = document.querySelector('#midOv .imp-body'); b.scrollTop = b.scrollHeight; }); await W8(200);
+  await shot('08c-midas-prev', [['#midLoads',1],['#midPrev table',2],['#midBatch',3],['#midApply',4]], await midClip());
+  await page.click('#midClose'); await W8(300);
   await page.click('#loadClose'); await W8(300);
   /* 6 判定列、警示 */
   { const v = await box('#verdict'); await shot('09-verdict', [['#verdict',1,2]], {x:0, y:0, width:W, height:v.y+v.height+12}); }
