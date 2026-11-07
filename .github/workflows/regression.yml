@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04   # Playwright 1.56.1 不支援 ubuntu-latest（26.04）的 chromium
     defaults:
       run:
         working-directory: tests
