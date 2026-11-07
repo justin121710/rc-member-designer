@@ -483,6 +483,14 @@ P_u > 0.3A_g f'c 或 f'c > 700 之柱 h_x ≤ 20 cm（§18.4.5.2(f)）。
    （Tailwind 已改為內嵌靜態 CSS，見 `style[data-tw]`；新增 Tailwind 類別時要在那裡補規則。）
 7. 實心斷面的繫筋以貫穿全斷面建模，超寬斷面實務上需改用內部套疊箍筋。
 
+## 從 Midas 匯入（工具整合）
+
+柱、梁兩模組的載重表有「**從 Midas 匯入**」：Midas Civil 2022 的 Beam Force 結果表格（貼上或 .txt／.csv／.xlsx）＋模型 .mct（midas-curve-gen 或 Midas 匯出），
+依結構群組歸屬構件、單位換算為 tf、tf·m、挑出控制組合（同一列為同時內力），套用到目前構件或一次建立到構件清單；可帶入斷面尺寸、$f'_c$、靜載重軸力 $P_D$。
+內力來源（元素端點、控制條件）存入案件檔並列在計算書，供 [StructAudit-AI](https://github.com/justin121710/StructAudit-AI) 審查。
+四個工具（midas-curve-gen → Midas → 本工具 → StructAudit-AI）的串接流程、交換格式、里程碑與待實機核對項目見 [docs/INTEGRATION.md](docs/INTEGRATION.md)。
+解析與挑選規則在 `core/midas-io.js`（純函式），測試 `tests/midas.test.js`（數值）、`tests/midas-ui.test.js`（介面）。
+
 ## 程式結構（U9）
 
 - `core/rc-core.js`：純計算函式（β₁、E_c、φ（表 21.2.2 與橋梁 §5.3.2）、平衡軸力、長細效應彎矩放大、頂／底配對 M₁/M₂、

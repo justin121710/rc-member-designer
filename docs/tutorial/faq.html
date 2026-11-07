@@ -141,6 +141,16 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
   <li>若表中已有組合，會詢問「取代全部」或「附加在後面」（圖 7）。工具會自動找出控制組合。</li></ul>
   <figure class="half"><img src="img/07-csv-ask.png"><figcaption>圖 7　表中已有組合時的詢問</figcaption></figure></div>
 
+  <div class="q long"><h3>Q7a. 可以直接用 Midas Civil 的內力結果嗎？</h3>
+  <p>可以。載重表的「從 Midas 匯入」讀 Midas 的 Beam Force 結果表格（全選複製貼上，或 .txt／.csv／.xlsx），再加上模型 .mct（midas-curve-gen 產生或 Midas 匯出）：</p>
+  <ul><li>依 .mct 的<b>結構群組</b>把元素歸到構件，一次可建立多個構件到構件清單；沒有 .mct 時手動輸入元素編號（Midas 寫法 <code>101to110</code>）。</li>
+  <li>單位依表格標題（tonf、kN、kgf 與 m、cm、mm）自動換算為 tf、tf·m。</li>
+  <li>柱自動挑出 \(P_u\)、\(M_{ux}\)、\(M_{uy}\)、合彎矩、剪力、扭矩的控制組合，每組列構件頂、底兩列；梁每組合取最大正、負彎矩。每一列都是<b>同一組合同一斷面</b>的同時內力，不會把不同組合的最大值混在一起。</li>
+  <li>包絡組合（名稱含 (max)／(min)）與單一工況預設不勾選。</li>
+  <li>可順便套用 .mct 的斷面尺寸、材料名稱中的 \(f'_c\)，以及靜載重軸力 \(P_D\)。</li>
+  <li>計算書載重表後會列「內力來源」：每列來自哪個元素哪一端、哪個條件控制，方便審查核對。</li></ul>
+  <p>表格欄位與正負號依公開資料實作，第一次使用請拿一根構件與 Midas 結果對照。</p></div>
+
   <div class="q"><h3>Q8. 載重全部填好了，為什麼控制剪力的組合不是 \(V_u\) 最大的那組？</h3>
   <p>因為 \(V_c\) 隨軸力 \(N_u\) 改變；在塑鉸區軸壓低於門檻時 \(V_c=0\)（建築柱依 §18.4.6.2.1 須同時滿足 (a) 地震引致剪力 \(V_e\ge\tfrac12V_{des}\) 與 (b) \(P_u<A_gf'_c/20\)；非地震剪力控制之柱保留 \(V_c\)，亦可改選「僅依軸力」之保守作法）。低軸壓（或軸拉）組合常常需要最多箍筋。工具會<b>逐組合各算一次</b>，以強度需求間距最小者為控制組合，並在「結果摘要」與計算書列出逐組合明細（圖 8 <span class="n">1</span>）。梁也一樣逐組合檢核：扭矩常不與最大剪力同組出現，只看 \(V_u\) 最大的組合會漏掉扭矩。</p>
   <figure><img src="img/f-shear.png"><figcaption>圖 8　剪力逐組合明細（範本「橋墩柱」）：各組合 \(N_u\)、\(V_c\)、\(V_s\) 需求與強度需求間距</figcaption></figure></div>

@@ -1,0 +1,33 @@
+; 測試用最小模型（tests/midas.test.js）：P1 墩柱 101–103（節點 1→4 由下往上）、帽梁 201–202
+*UNIT    ; Unit System
+; FORCE, LENGTH, HEAT, TEMPER
+   TONF, M, KCAL, C
+*NODE    ; Nodes
+; iNO, X, Y, Z
+     1, 0, 0, 0
+     2, 0, 0, 4
+     3, 0, 0, 8
+     4, 0, 0, 12
+     5, -5, 0, 12
+     6, 5, 0, 12
+     7, 20, 0, 0
+*ELEMENT    ; Elements
+; iEL, TYPE, iMAT, iPRO, iN1, iN2, ANGLE, iSUB,
+   101, BEAM,    1,     1,     1,     2,     0,     0
+   102, BEAM,    1,     1,     2,     3,     0,     0
+   103, BEAM,    1,     1,     3,     4,     0,     0
+   201, BEAM,    1,     2,     5,     4,     0,     0
+   202, BEAM,    1,     2,     4,     6,     0,     0
+*MATERIAL    ; Material
+   1, CONC , C350, 0, 0, , C, NO, 0.05, 1, TWN-USD100(RC), , C350
+*SECTION    ; Section
+   1, DBUSER    , COL, CC, 0, 0, 0, 0, 0, 0, YES, NO, SB , 2, 2.4, 1.8, 0, 0, 0, 0, 0, 0, 0, 0
+   2, DBUSER    , CAP, CT, 0, 0, 0, 0, 0, 0, YES, NO, SB , 2, 2.0, 2.2, 0, 0, 0, 0, 0, 0, 0, 0
+   3, DBUSER    , PILE, CC, 0, 0, 0, 0, 0, 0, YES, NO, SR , 2, 1.5, 0, 0, 0, 0, 0, 0, 0, 0, 0
+   4, DBUSER    , B, CC, 0, 0, 0, 0, 0, 0, YES, NO, B  , 2, 3.0, 2.0, 0.4, 0.5, 0, 0.5, 0, 0, 0, 0
+   5, DBUSER    , DBSEC, CC, 0, 0, 0, 0, 0, 0, YES, NO, SB , 1, KS, SB 600x600
+*GROUP    ; Group
+; NAME, NODE_LIST, ELEM_LIST, PLANE_TYPE
+   P1_COL, 1to4, 101to102 \
+   103, 0
+   P1_CAP, 4to6, 201 202, 0

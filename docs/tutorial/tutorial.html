@@ -61,7 +61,7 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
     <div>2. 認識畫面配置</div>
     <div>3. 在參數表輸入尺寸、材料與配筋</div>
     <div>4. 長細效應設定</div>
-    <div>5. 輸入載重組合（含 CSV 批次匯入）</div>
+    <div>5. 輸入載重組合（含 CSV 批次匯入、從 Midas 匯入）</div>
     <div>6. 看判定列與處理警示</div>
     <div>7. 檢視斷面圖與 P-M 互制曲線</div>
     <div>8. 結果摘要</div>
@@ -204,6 +204,20 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
     <li><span class="n">2</span>載重表已更新。關閉視窗後判定與圖面隨即重算。</li>
   </ol>
   <div class="warn"><b>確認輸入</b>輸入值應為已乘載重因數之設計值；長細效應不可忽略時（第 4 節），須為含二階效應之分析結果。</div>
+</section>
+
+<section class="chap">
+  <h3>從 Midas 匯入</h3>
+  <p>載重表的「<b>從 Midas 匯入</b>」直接讀 Midas Civil 的結果表格，依結構群組把元素歸到構件、換算成 tf、tf·m，並挑出控制組合（整體流程見 <code>docs/INTEGRATION.md</code>）。</p>
+  <ol>
+    <li><span class="n">1</span><b>模型 .mct</b>（建議）：midas-curve-gen 產生的 .mct，或 Midas 匯出的完整模型。工具用它的結構群組歸屬元素、用節點高程判定構件頂底，並讀斷面尺寸與單位。</li>
+    <li><span class="n">2</span><b>內力表</b>：在 Midas 的 Results &gt; Result Tables &gt; Beam &gt; Force 表格上全選複製（含標題列）貼上，或選 .txt／.csv／.xlsx 檔，按「讀取內力表」。單位取標題列括號；沒有時用 .mct 的 <code>*UNIT</code> 或手選。</li>
+    <li><span class="n">3</span><b>構件與選項</b>：勾選結構群組（一個群組＝一個構件）。單一載重工況與包絡組合預設不勾選（包絡各分量不是同時發生）。柱可指定靜載重工況，取構件底端軸力填入 \(P_D\)（橋梁容量設計用）。</li>
+    <li><span class="n">4</span><b>預覽</b>後按「套用到目前構件」（只勾一個群組時），或「建立到構件清單」（每個群組建立一個構件）。</li>
+  </ol>
+  <p>對應：柱 \(P_u = -\)Axial（壓為正）、\(M_{ux}\) ← Moment-y、\(M_{uy}\) ← Moment-z、\(V_{uy}\) ← Shear-z、\(V_{ux}\) ← Shear-y；斷面 B、H 方向與 Midas 局部 y、z 相反時勾「x／y 對調」。柱在群組內所有元素端點找出 \(P_u\) 最大與最小、\(M_{ux}\)、\(M_{uy}\) 正負最大、合彎矩、剪力、扭矩最大的組合，每個控制組合列構件頂、底兩列（供長細效應 \(M_1/M_2\) 配對），控制點在構件中間時另列一列。梁每個組合取群組內最大正、負彎矩、剪力、扭矩，再挑出控制組合；Midas 正 \(M_y\) 預設為下緣受拉。</p>
+  <p>匯入的來源（檔名、群組、元素、各列對應的元素端點與控制條件）會存進案件檔，並在計算書載重表後列出「內力來源」；匯入後若手動修改載重表，計算書會註明以表內數值為準。</p>
+  <div class="warn"><b>尚待實機核對</b>Midas 表格標題、Part 欄寫法、梁彎矩正負號與 .mct 斷面資料順序依公開資料實作，第一次使用請以一根構件的數值與 Midas 結果對照確認。Midas 內力為節點（中心線）值，柱面、支承面折減須自行處理。</div>
 </section>
 
 <section class="chap">
