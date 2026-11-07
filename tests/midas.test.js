@@ -120,9 +120,16 @@ test('梁：每組合取最大正負彎矩、剪力、扭矩；控制組合；�
   assert.ok(r.warnings.some(w => /側向彎矩/.test(w)));
 });
 
-test('載重指紋', () => {
+test('載重指紋 v2：共用測試向量、捨入邊界、舊 v1 鍵相容', () => {
   const a = [{name: 'A', Pu: 1, Mux: 2}], b = [{name: 'A', Pu: 1, Mux: 2.0004}], c = [{name: 'A', Pu: 1, Mux: 2.1}];
   assert.equal(M.loadsKey(a), M.loadsKey(b)); assert.notEqual(M.loadsKey(a), M.loadsKey(c));
+  const V = JSON.parse(fs.readFileSync(path.join(FIX, 'loads_key_vectors.json'), 'utf8'));
+  for(const v of V.cases) assert.equal(M.loadsKey(v.loads), v.key, v.note);   // StructAudit-AI 以同一檔驗證 Python 實作
+  assert.equal(M.keyNum(1.0625), '1063'); assert.equal(M.keyNum(-1.0625), '-1062'); assert.equal(M.keyNum(-0), '0');
+  assert.equal(M.keyNum(NaN), 'NaN'); assert.equal(M.keyNum(1e20), 'OV');
+  // 舊案件（loadsrc.key 為 v1）仍以 v1 比對，不誤報
+  assert.equal(M.loadsEdited(a, M.loadsKeyV1(a)), false); assert.equal(M.loadsEdited(c, M.loadsKeyV1(a)), true);
+  assert.equal(M.loadsEdited(a, M.loadsKey(a)), false); assert.equal(M.loadsEdited(c, M.loadsKey(a)), true);
 });
 
 /* ---------- 版（M2）：Plate Force、Wood-Armer ---------- */

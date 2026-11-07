@@ -818,8 +818,8 @@ img,video{max-width:100%;height:auto}
       <div class="mid-step" id="midStep3"><b>3. 構件與選項</b>
         <div id="midGrpWrap" class="mt-1"></div>
         <div class="mid-opts mt-2">
-          <label><input type="radio" name="midSel" value="ctrl" checked> 只列控制組合</label>
-          <label><input type="radio" name="midSel" value="all"> 列出全部勾選的組合</label>
+          <label title="只列 P、M、V、T 各分量最大／最小所在的組合；工具逐列驗算，但未列入的組合仍可能控制"><input type="radio" name="midSel" value="ctrl" checked> 極值篩選（快速）</label>
+          <label title="每個勾選的組合都列出，由工具逐列驗算找出真正的控制列；正式設計建議用這個"><input type="radio" name="midSel" value="all"> 全部組合（逐組驗算，正式設計建議）</label>
           <label class="mid-col"><input type="checkbox" id="midSwap"> x／y 對調（Midas 局部 y、z 與本工具 B、H 方向相反時）</label>
           <label class="mid-plate">版配筋方向：<select id="midDir"><option value="x">x 向（M<sub>xx</sub>、V<sub>xx</sub>）</option><option value="y">y 向（M<sub>yy</sub>、V<sub>yy</sub>）</option></select></label>
           <label class="mid-beam">Midas 正 M<sub>y</sub>／M<sub>xx</sub>：<select id="midSag"><option value="1">下緣受拉（M<sub>u</sub><sup>+</sup>）</option><option value="0">上緣受拉（M<sub>u</sub><sup>−</sup>）</option></select></label>
@@ -835,7 +835,8 @@ img,video{max-width:100%;height:auto}
         <div id="midPrev" class="mt-1" style="overflow-x:auto;max-width:100%"></div>
       </div>
     </div>
-    <div class="setup-act" style="padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+    <div class="setup-act" style="padding:10px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;align-items:center">
+      <div id="midSum" class="mid-info" style="flex:1 1 320px;text-align:left;font-size:12px"></div>
       <button id="midBatch" type="button" disabled title="每個勾選的群組建立（或更新）一個構件到構件清單">建立到構件清單</button>
       <button id="midApply" type="button" class="btn-primary" disabled title="只勾選一個群組時可用：取代目前構件的載重組合">套用到目前構件</button>
     </div>
@@ -5432,7 +5433,8 @@ const codeHash = () => { if(_codeHash) return _codeHash;
   // 只計頁面原有之內嵌程式（排除匯出時動態注入者），雜湊不隨操作順序改變
   const h = sha256([...document.querySelectorAll('script:not([src]):not([data-dyn])')].map(x=>x.textContent).join('\n') + '\n' + (_coreText ?? ('core ' + RC_CORE_VERSION))).slice(0,12);
   if(_coreText !== null) _codeHash = h; return h; };
-const inputHash = () => { const c = caseSnapshot(); delete c.saved; delete c.members; delete c.conf; return sha256(JSON.stringify(c)); };
+// review（審查紀錄）屬於附註，不是計算輸入：不計入雜湊（StructAudit-AI utils/pairing.py 以同一規則重算比對）
+const inputHash = () => { const c = caseSnapshot(); delete c.saved; delete c.members; delete c.conf; delete c.review; return sha256(JSON.stringify(c)); };
 const traceText = () => `v${APP_VERSION}｜程式 ${codeHash()}｜輸入 SHA-256 ${inputHash().slice(0,16)}`;
 let CASE_READY = false, CASE_T = 0;
 function caseInputs(){
@@ -5447,7 +5449,8 @@ function caseSnapshot(){
           values, loads:LOADS, bloads:BLOADS, devexp: JSON.parse(JSON.stringify(DEVEXP)),
           conf: typeof CONF_ITEMS!=='undefined' ? {pylon: confExport('pylon'), beam: confExport('beam')} : {pylon:[], beam:[]},
           members: typeof MEMBERS!=='undefined' ? MEMBERS : [],
-          loadsrc: JSON.parse(JSON.stringify(LOADSRC))};
+          loadsrc: JSON.parse(JSON.stringify(LOADSRC)),
+          review: REVIEW ? JSON.parse(JSON.stringify(REVIEW)) : null};
 }
 function caseApply(c){
   if(CONFIRM){ CONFIRM.pylon.clear(); CONFIRM.beam.clear(); }
@@ -5466,6 +5469,10 @@ function caseApply(c){
     el.value = val;
   }
   LOADSRC = loadSrcClean(c.loadsrc);
+  REVIEW = reviewClean(c.review);
+  if(REVIEW){ REVIEW.mod = c.tab==='beam' ? 'beam' : 'pylon';
+    if(REVIEW.status==='pending-recalc' && !c._member){ REVIEW_NOTICE = JSON.parse(JSON.stringify(REVIEW));     // 開啟即以新輸入重算
+      REVIEW.status = 'recalculated'; REVIEW.recalcAt = new Date().toISOString(); } }
   LOADS  = caseRows(c.loads,  LOAD_NUM)  || LOADS;
   BLOADS = caseRows(c.bloads, BLOAD_NUM) || BLOADS;
   if(c.axis==='x'||c.axis==='y') AXIS = c.axis;
@@ -5481,7 +5488,7 @@ function caseApply(c){
   render(); renderBeam();          // 柱、梁兩個模型都依案件重算（不只目前分頁）
   document.getElementById(c.tab==='beam'?'tabBeam':'tabPylon').click();
 }
-var CASE_NOTICE = null;
+var CASE_NOTICE = null, REVIEW_NOTICE = null;
 /* 案件檔、構件快照、自動保存皆可能來自外部檔案：載重列只保留已知欄位，數值一律 Number()（非有限值歸零），
    名稱強制為字串、位置只接受 top/bot——避免檔案內夾帶 HTML／程式碼於畫面重繪時執行。 */
 const LOAD_NUM = ['Pu','Mux','Muy','Vux','Vuy','Tu'], BLOAD_NUM = ['Mpos','Mneg','Vu','Tu'];
@@ -5507,25 +5514,55 @@ function loadSrcClean(x){
       mode: a.mode==='all' ? 'all' : 'ctrl', swap: !!a.swap, sagPos: a.sagPos!==false, pd: S(a.pd), tb: S(a.tb, 300), key: S(a.key, 20000),
       rows: arr(a.rows, q => ({name: S(q.name), pos: S(q.pos, 8), tag: S(q.tag, 300)})),
       ctrl: arr(a.ctrl, q => ({why: S(q.why, 60), load: S(q.load), tag: S(q.tag, 60), v: caseNum(q.v)})),
-      warn: Array.isArray(a.warn) ? a.warn.slice(0, 20).map(w => S(w, 400)) : []};
+      warn: Array.isArray(a.warn) ? a.warn.slice(0, 20).map(w => S(w, 400)) : [],
+      secv: Object.fromEntries(SECV_KEYS[k].filter(id => a.secv && a.secv[id] != null).map(id => [id, S(a.secv[id], 40)]))};
   }
   return out;
+}
+/* 匯入時的斷面與材料（loadsrc.secv）：之後若改變，內力仍是舊分析的結果 */
+const SECV_KEYS = {pylon: ['secType','B','H','Dia','tw','fc'], beam: ['bType','bw','bh','bfc']};
+function secvDiff(mod, a){
+  if(!a || !a.secv) return [];
+  return SECV_KEYS[mod].filter(id => id in a.secv).map(id => { const el = document.getElementById(id); const now = el ? String(el.value) : '';
+      return now !== String(a.secv[id]) && !(Number.isFinite(+now) && Number.isFinite(+a.secv[id]) && Math.abs(+now - +a.secv[id]) < 1e-9)
+        ? {id, label: pinLabel(id), was: a.secv[id], now} : null; }).filter(Boolean);
+}
+/* 審查紀錄（StructAudit-AI 寫回案件檔的 review 區塊）：外部檔案，欄位白名單、字串化 */
+var REVIEW = null;
+function reviewClean(x){
+  if(!x || typeof x!=='object' || !Array.isArray(x.changes)) return null;
+  const S = (v, n=200) => v==null ? '' : String(v).slice(0, n);
+  return {by: S(x.by, 60), at: S(x.at, 40), source: S(x.source), pairing: S(x.pairing, 20), mod: x.mod==='beam' ? 'beam' : 'pylon',
+    status: x.status==='recalculated' ? 'recalculated' : 'pending-recalc', recalcAt: S(x.recalcAt, 40), analysis: S(x.analysis, 400),
+    changes: x.changes.slice(0, 60).filter(c => c && typeof c==='object').map(c => ({id: S(c.id, 40), label: S(c.label, 80), unit: S(c.unit, 20), old: S(c.old, 60), new: S(c.new, 60)}))};
+}
+/* 計算書「審查修正紀錄」：哪些欄位依審查建議改過；本計算書即修改後的重算結果，是否通過以本計算書的判定為準 */
+function rpReview(mod){
+  const R = REVIEW; if(!R || R.mod !== mod || !R.changes.length) return '';
+  const nesc = t => nosb(esc(t));
+  return `<div class="rp-h3">審查修正紀錄</div><div class="rp-note">本版依 ${nesc(R.by || '審查')} 的建議（${nesc((R.at||'').replace('T',' ').slice(0,16))}${R.source ? `，計算書 ${nesc(R.source)}` : ''}${R.pairing ? `，案件檔配對${nesc(R.pairing)}` : ''}）修改下列欄位，並以修改後的輸入重算——本計算書即重算結果。審查建議不等於設計已通過，是否合格以本計算書各項判定為準。${R.analysis ? ` <b>${nesc(R.analysis)}。</b>` : ''}</div>`
+    + `<table class="no-break"><thead><tr><th class="l">欄位</th><th>原值</th><th>新值</th><th class="l">單位</th></tr></thead><tbody>`
+    + R.changes.map(c => `<tr><td class="l">${nesc(c.label)}（${nesc(c.id)}）</td><td>${nesc(c.old)}</td><td>${nesc(c.new)}</td><td class="l">${nesc(c.unit)}</td></tr>`).join('') + `</tbody></table>`;
 }
 /* 計算書「內力來源」：從 Midas 匯入時列出檔名、群組、元素、控制條件；匯入後載重表被修改則註明 */
 function rpLoadSrc(mod){
   const nesc = t => nosb(esc(t));
   const a = LOADSRC && LOADSRC[mod]; if(!a) return '';
   const cur = mod==='beam' ? BLOADS : LOADS;
-  const edited = MidasIO.loadsKey(cur) !== a.key;
+  const edited = MidasIO.loadsEdited(cur, a.key);
   const ctrl = a.ctrl.length ? a.ctrl.map(c => `${esc(c.why)}：${nesc(c.load)}（${nesc(c.tag)}）`).join('；') : '—';
+  const stale = secvDiff(mod, a);
   const rows = a.rows.map(q => `<tr><td class="l">${nesc(q.name)}</td><td class="l">${q.pos==='top'?'頂':q.pos==='bot'?'底':'—'}</td><td class="l">${nesc(q.tag)}</td></tr>`).join('');
   return `<div class="rp-h3">內力來源</div>`
     + `<div class="rp-note">本表載重組合由 Midas Civil 結果表格匯入（${nesc((a.at||'').replace('T',' ').slice(0,16))}）：內力表 <b>${nesc(a.table||'貼上')}</b>（單位 ${nesc(a.units)}，已換算為 tf、tf·m）`
     + `${a.mct ? `、模型 <b>${nesc(a.mct)}</b>` : ''}；構件 ${a.group ? `結構群組 <b>${nesc(a.group)}</b>、` : ''}元素 ${nesc(a.elems)}${a.tb ? `，${nesc(a.tb)}` : ''}。`
     + (a.kind==='plate' ? `版內力（Plate Force）取 ${a.dir} 向 Wood-Armer 設計彎矩 \\(M_{${a.dir}}^{*}=M_{${a.dir}${a.dir}}\\pm|M_{xy}|\\)（及其修正式），Midas 正 M 視為${a.sagPos?'下緣':'上緣'}受拉；剪力取 \\(|V_{${a.dir}${a.dir}}|\\)；每公尺版帶。`
        : mod==='beam' ? `Midas 正 M_y 視為${a.sagPos?'下緣':'上緣'}受拉。` : `P_u = −Axial、M_ux = Moment-y、M_uy = Moment-z、V_uy = Shear-z、V_ux = Shear-y${a.swap?'（x、y 已對調）':''}。`)
-    + `${a.mode==='all' ? '列出全部勾選組合。' : '只列控制組合'}；控制條件：${ctrl}。${a.pd ? `靜載重軸力 P_D 取自載重 ${nesc(a.pd)}。` : ''}`
-    + (edited ? ' <b>匯入後載重表已修改，以表內數值為準。</b>' : '') + `</div>`
+    + (a.mode==='all' ? '匯入全部勾選的組合，本計算書逐列驗算。' : '匯入方式為<b>極值篩選</b>：只列 P、M、V、T 各分量最大／最小所在的組合，本計算書逐列驗算這些列；未列入的組合仍可能控制，正式設計宜改用全部組合。')
+    + (mod==='beam' ? '每一列是該組合在群組內各分量的最大值（<b>群組設計包絡</b>），M⁺、M⁻、V、T 可能來自不同位置，不是同時內力。' : '每一列是同一組合、同一端點的同時內力。')
+    + `篩選依據：${ctrl}。${a.pd ? `靜載重軸力 P_D 取自載重 ${nesc(a.pd)}。` : ''}`
+    + (edited ? ' <b>匯入後載重表已修改，以表內數值為準。</b>' : '')
+    + (stale.length ? ` <b>斷面或材料已與匯入時不同（${stale.map(d => `${nesc(d.label)} ${nesc(d.was)} → ${nesc(d.now)}`).join('、')}），表中內力仍是舊分析的結果；若改變影響分析勁度、自重或材料，須回 Midas 重分析並重新匯入。</b>` : '') + `</div>`
     + (rows ? `<table class="no-break"><thead><tr><th class="l">組合</th><th class="l">位置</th><th class="l">Midas 來源（元素-端點）</th></tr></thead><tbody>${rows}</tbody></table>` : '');
 }
 /* 構件清單：每筆的 id、名稱、模組、時間轉成字串；快照內的載重列同樣清理 */
@@ -5542,7 +5579,7 @@ function caseMembers(a){
 function pinLabel(id){ for(const mod of ['pylon','beam']) for(const g of (PIN_META[mod]||[])) for(const p of g[1]) if(p[0]===id) return String(p[2]).replace(/<[^>]+>/g,''); return id; }
 function caseNotice(){
   const N = CASE_NOTICE; if(!N) return; CASE_NOTICE = null;
-  askChoice('案件檔版本較舊', `此案件以版本 <b>${esc(N.from)}</b> 存檔，目前程式為 <b>${APP_VERSION}</b>。下列 <b>${N.fields.length}</b> 個欄位在舊檔中沒有記錄，<b>已採用目前預設值</b>，計算結果可能與當時不同，請確認：<br>`
+  return askChoice('案件檔版本較舊', `此案件以版本 <b>${esc(N.from)}</b> 存檔，目前程式為 <b>${APP_VERSION}</b>。下列 <b>${N.fields.length}</b> 個欄位在舊檔中沒有記錄，<b>已採用目前預設值</b>，計算結果可能與當時不同，請確認：<br>`
     + N.fields.slice(0,20).map(t=>'・'+esc(t)).join('<br>') + (N.fields.length>20 ? '<br>…' : ''), [{label:'知道了', value:1, primary:true}]);
 }
 /* ---------- 多構件（U3） ----------
@@ -5870,6 +5907,14 @@ function caseDownload(){
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 /* 開啟案件（H9）：目前輸入有未存檔變更時先確認；構件清單提供「取代／合併／保留」；開啟後構件清單與其儲存同步 */
+/* 開啟含審查紀錄（待重算）的案件：列出改了哪些欄位、已以新輸入重算，提醒看判定與是否需回 Midas 重分析 */
+function reviewNotice(){
+  const R = REVIEW_NOTICE; if(!R) return; REVIEW_NOTICE = null;
+  const rows = R.changes.map(c => `・${esc(c.label)}（${esc(c.id)}）：${esc(c.old)} → <b>${esc(c.new)}</b> ${esc(c.unit)}`).join('<br>');
+  return askChoice('已套用審查建議', `此案件含 ${esc(R.by || '審查')} 寫入的 <b>${R.changes.length}</b> 項修改（${esc((R.at||'').replace('T',' ').slice(0,16))}${R.pairing ? `，案件檔配對${esc(R.pairing)}` : ''}）：<br>${rows}<br>`
+    + `工具已以修改後的輸入<b>重新計算</b>。審查建議不等於設計已通過：請看判定列與計算書，確認原不合格項目是否已改善；計算書會列出「審查修正紀錄」。`
+    + (R.analysis ? `<br><b>${esc(R.analysis)}。</b>` : ''), [{label:'知道了', value:1, primary:true}]);
+}
 async function caseOpenFile(file){
   if(!file) return;
   let c;
@@ -5897,6 +5942,7 @@ async function caseOpenFile(file){
   try{ caseApply(c); }catch(e){ alert('無法開啟案件：' + e.message); return; }
   MEMBERS = next; memSave(); memRender();      // 構件清單只有一個儲存來源：與自動保存同步
   caseAutosave(); caseMark();
+  setTimeout(async () => { await caseNotice(); reviewNotice(); }, 300);   // 舊版欄位提醒（開檔時原本不會顯示）與審查紀錄
 }
 
 /* ---------- 右欄結果分頁：卡片全部留在 DOM（計算書與匯出照樣讀得到），只切換顯示 ---------- */
@@ -6719,6 +6765,7 @@ function buildReport(M){
     <td>${d(R2.L.Muy,0)}</td><td>${fdc(R2.dc)}</td><td class="l">${R2.bi.method}${biRefTxt(R2.bi)}</td></tr>`);
   o.push(`</tbody></table>`);
   o.push(rpLoadSrc('pylon'));
+  o.push(rpReview('pylon'));
   if(M.opt.pile && M.opt.pile.e > 0){
     const P = M.opt.pile;
     o.push(note(`施工偏心（建築物基礎構造設計規範 §5.6.3 第 4 款、§5.2.3 第 3 款）：e = ${d(P.e,1)} cm（${P.mode==='L75'?`樁長之 1/75 = ${d(P.L,0)}/75`:'樁頭位置偏差，§5.2.3 解說 3 約 5～10 cm'}）。
@@ -9647,6 +9694,7 @@ function buildBeamReport(B){
     if(B.ctrl) o.push(eq(`D/C=\\frac{M_u}{\\phi M_n}=\\frac{${d(B.ctrl.k.Mu/TFM,2)}}{${d(B.phiMn/TFM,2)}}=${fdc(B.ctrl.dc)}`));
   }
   o.push(rpLoadSrc('beam'));
+  o.push(rpReview('beam'));
   /* 正、負彎矩兩檢核斷面皆判定，取最不利者（本計算書之明細為目前檢核斷面） */
   if(B.alt){
     const row = (X, sg, on) => { const C = X.ctrl, ok = on && C;
@@ -10780,6 +10828,15 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   function open(mod){
     if(ST.mod !== mod) $('midGrpWrap').querySelectorAll('input[data-g]').forEach(x => x.checked = false);   // 柱、梁各選各的構件
     ST.mod = mod;
+    // 沿用目前構件上次匯入的設定（篩選方式、軸向對調、正負號、配筋方向、P_D 的載重）；來源版本不同時仍要重新確認
+    const last = LOADSRC && LOADSRC[mod];
+    ST.reuse = last ? (last.group || last.elems || '') : '';
+    if(last){
+      const r = ov.querySelector(`input[name=midSel][value="${last.mode==='all' ? 'all' : 'ctrl'}"]`); if(r) r.checked = true;
+      $('midSwap').checked = !!last.swap; $('midSag').value = last.sagPos===false ? '0' : '1';
+      if(last.dir) $('midDir').value = last.dir;
+      ST.pdPref = last.pd || '';
+    }
     ov.classList.toggle('m-col', mod==='pylon'); ov.classList.toggle('m-beam', mod==='beam');
     $('midMod').textContent = mod==='beam' ? '梁／版模組：每個組合取群組內最大正、負彎矩與剪力、扭矩' : '柱模組（墩柱、橋塔、基樁）：構件頂、底兩端各一列';
     refresh();
@@ -10860,7 +10917,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     const w = $('midLoads'), pd = $('midPD');
     if(!ST.tbl || !ST.tbl.ok){ w.innerHTML = ''; pd.innerHTML = '<option value="">不填</option>'; return; }
     w.innerHTML = SB(ST.tbl.loads.map((l, i) => `<label><input type="checkbox" data-l="${i}"${MidasIO.isEnvelope(l) || isCase(l) ? '' : ' checked'}> ${E(l)}${MidasIO.isEnvelope(l) ? ' <span class="mid-info">（包絡）</span>' : isCase(l) ? ' <span class="mid-info">（單一工況）</span>' : ''}</label>`).join(''));
-    const dl = ST.tbl.loads.findIndex(isDead);
+    const pref = ST.pdPref ? ST.tbl.loads.indexOf(ST.pdPref) : -1, dl = pref >= 0 ? pref : ST.tbl.loads.findIndex(isDead);
     pd.innerHTML = '<option value="">不填</option>' + ST.tbl.loads.map((l, i) => `<option value="${i}"${i===dl ? ' selected' : ''}>${E(l)}</option>`).join('');
   }
   // 單一載重工況（未乘載重因數）預設不勾選：靜載重名稱，或 Midas 表格的工況後綴 (ST)(CS)(MV)(RS)(TH)
@@ -10879,7 +10936,8 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     const pdI = $('midPD').value;
     if(ST.mod==='pylon' && pdI !== ''){
       const v = MidasIO.deadAxial(ST.tbl, mem.elems, ST.mct, ST.tbl.loads[+pdI]);
-      if(v != null){ vals.brPD = Math.round(v*10)/10; notes.push(`P_D = ${g3(v)} tf（${E(ST.tbl.loads[+pdI])}，構件底端）`); }
+      const bn = (r.info && r.info.known && r.info.bot != null) ? `底端節點 ${r.info.bot}` : '底端（依元素編號推定）';
+      if(v != null){ vals.brPD = Math.round(v*10)/10; notes.push(`P_D = ${g3(v)} tf（${E(ST.tbl.loads[+pdI])}，構件${bn}）`); }
       else notes.push(`載重 ${E(ST.tbl.loads[+pdI])} 在此構件沒有資料，P_D 未填。`);
     }
     const mi = r.info || {};
@@ -10911,8 +10969,8 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
       swap: ST.mod==='pylon' && $('midSwap').checked, sagPos: $('midSag').value==='1',
       pd: ST.mod==='pylon' && pdI !== '' && vals.brPD != null ? ST.tbl.loads[+pdI] : '',
       tb: ST.mod==='pylon' ? (mi.known && mi.top != null ? `頂端節點 ${mi.top}、底端節點 ${mi.bot}（依 .mct 節點高程）` : '頂底依元素編號推定') : '',
-      rows: r.src, ctrl: r.ctrl, warn: r.warnings, key: MidasIO.loadsKey(r.loads)};
-    return {name, loads: r.loads, ctrl: r.ctrl, warnings: r.warnings, vals, notes, src};
+      rows: r.src, ctrl: r.ctrl, warn: r.warnings, key: MidasIO.loadsKey(r.loads), secv: secSnap(vals)};
+    return {name, loads: r.loads, ctrl: r.ctrl, warnings: r.warnings, vals, notes, src, raw: rawPair(r)};
   }
 
   /* 版：Wood-Armer 換算後之單位寬（1 m）設計彎矩；版厚取自 .mct *THICKNESS */
@@ -10929,17 +10987,36 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     }
     const src = {from: 'midas', kind: 'plate', dir, at: new Date().toISOString(), mct: ST.mctName, table: ST.tblName || '貼上', group: ST.mct ? mem.name : '',
       elems: idList(mem.elems), units: `${ST.tbl.units.force}, ${ST.tbl.units.len}`, mode: opts.all ? 'all' : 'ctrl', swap: false, sagPos, pd: '', tb: '',
-      rows: r.src, ctrl: r.ctrl, warn: r.warnings, key: MidasIO.loadsKey(r.loads)};
+      rows: r.src, ctrl: r.ctrl, warn: r.warnings, key: MidasIO.loadsKey(r.loads), secv: secSnap(vals)};
     return {name: mem.name, loads: r.loads, ctrl: r.ctrl, warnings: r.warnings, vals, notes, src};
+  }
+  /* 匯入後的斷面與材料（套用值優先、否則目前輸入）：之後若改變，計算書會提示內力可能過期 */
+  const secSnap = vals => Object.fromEntries(SECV_KEYS[ST.mod==='beam' ? 'beam' : 'pylon'].map(id => [id, String(vals[id] != null ? vals[id] : ($(id) ? $(id).value : ''))]));
+  /* 第一列的原始 Midas 列與轉換後的設計列（柱）：讓使用者不必翻文件就看得到正負號與軸向對應 */
+  function rawPair(r){
+    if(ST.mod==='beam' || !r.loads.length || !r.src[0]) return null;
+    const m = /^E(\d+)-(\w+)$/.exec(r.src[0].tag || ''); if(!m) return null;
+    const row = ST.tbl.rows.find(x => x.elem === +m[1] && x.load === r.loads[0].name.replace(/ @E.*$/, '') && (x.end === m[2] || x.part === m[2]));
+    return row ? {row, out: r.loads[0]} : null;
+  }
+  function summary(R, mems){
+    const all = ST.tbl ? ST.tbl.loads : [], used = new Set(chosenLoads());
+    const ex = all.filter(l => !used.has(l)).map(l => `${E(l)}${MidasIO.isEnvelope(l) ? '（包絡）' : isCase(l) ? '（單一工況）' : ''}`);
+    const mode = ov.querySelector('input[name=midSel]:checked').value==='all' ? '全部組合' : '極值篩選';
+    $('midSum').innerHTML = SB(!ST.tbl || !ST.tbl.ok ? '尚未讀取內力表' :
+      `內力表 ${ST.tbl.rows.length} 列（${E(ST.tbl.units.force)}, ${E(ST.tbl.units.len)}）｜模型 ${ST.mctName ? E(ST.mctName) : '未提供'}｜排除 ${ex.length ? ex.join('、') : '無'}｜`
+      + (R ? `${mode}：將建立 <b>${R.loads.length}</b> 列 × ${mems.length} 個構件` : '尚未勾選構件')
+      + (ST.reuse ? `｜已沿用上次匯入（${E(ST.reuse)}）的設定` : ''));
   }
   function preview(){
     const mems = members(), P = $('midPrev');
     $('midApply').disabled = mems.length !== 1; $('midBatch').disabled = !mems.length;
-    if(!ST.tbl || !ST.tbl.ok){ P.innerHTML = ''; $('midPrevNote').textContent = ''; return; }
+    if(!ST.tbl || !ST.tbl.ok){ P.innerHTML = ''; $('midPrevNote').textContent = ''; summary(null, mems); return; }
     if(ST.tbl.kind==='plate' && ST.mod!=='beam'){ $('midApply').disabled = $('midBatch').disabled = true;
       P.innerHTML = '<span style="color:var(--bad)">這是版內力（Plate Force），請到「梁／版」模組的載重表按「從 Midas 匯入」。</span>'; return; }
-    if(!mems.length){ P.innerHTML = '<span class="mid-info">勾選一個以上的構件。</span>'; $('midPrevNote').textContent = ''; return; }
+    if(!mems.length){ P.innerHTML = '<span class="mid-info">勾選一個以上的構件。</span>'; $('midPrevNote').textContent = ''; summary(null, mems); return; }
     const R = compute(mems[0]);
+    summary(R, mems);
     $('midPrevNote').textContent = mems.length > 1 ? `（顯示第 1 個：${mems[0].name}；共 ${mems.length} 個構件）` : `（${mems[0].name || '構件'}）`;
     const B = ST.mod==='beam';
     const head = B ? ['組合', 'M<sub>u</sub><sup>+</sup>', 'M<sub>u</sub><sup>−</sup>', 'V<sub>u</sub>', 'T<sub>u</sub>', '來源']
@@ -10947,7 +11024,13 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     const keys = B ? ['Mpos', 'Mneg', 'Vu', 'Tu'] : ['Pu', 'Mux', 'Muy', 'Vux', 'Vuy', 'Tu'];
     const body = R.loads.map((l, i) => `<tr><td class="l">${E(l.name)}</td>${B ? '' : `<td>${l.pos==='top' ? '頂' : l.pos==='bot' ? '底' : '—'}</td>`}${keys.map(k => `<td>${g3(l[k])}</td>`).join('')}<td class="l mid-info">${E(R.src.rows[i] ? R.src.rows[i].tag : '')}</td></tr>`).join('');
     P.innerHTML = SB(`<table><thead><tr>${head.map((h, i) => `<th${i===0 || i===head.length-1 ? ' class="l"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${body || `<tr><td colspan="${head.length}">（無）</td></tr>`}</tbody></table>`
-      + `<div class="mid-info mt-1">單位 tf、tf·m。控制條件：${R.ctrl.map(c => `${esc(c.why)} → ${E(c.load)}（${E(c.tag)}，${g3(c.v)}）`).join('；') || '—'}</div>`
+      + `<div class="mid-info mt-1">單位 tf、tf·m。篩選依據：${R.ctrl.map(c => `${esc(c.why)} → ${E(c.load)}（${E(c.tag)}，${g3(c.v)}）`).join('；') || '—'}</div>`
+      + (B ? `<div class="mt-1">梁／版：每一列是該組合在群組內各分量的最大值（<b>群組設計包絡</b>），M<sub>u</sub><sup>+</sup>、M<sub>u</sub><sup>−</sup>、V<sub>u</sub>、T<sub>u</sub> 可能來自不同位置（見「來源」），不是同時內力：撓曲各自檢核偏保守，剪力與扭矩的交互作用宜逐點檢核。</div>`
+           : `<div class="mt-1">柱：每一列是同一組合、同一端點的同時內力，工具會逐列驗算並找出控制列。${ov.querySelector('input[name=midSel]:checked').value==='all' ? '' : '<b>極值篩選</b>只列各分量最大／最小所在的組合，未列入的組合仍可能控制（軸力與彎矩都不是極值、但組合起來最不利），正式設計請改選「全部組合」。'}</div>`)
+      + (R.raw ? `<div class="mt-1"><b>原始列 → 設計列</b>（${E(R.raw.out.name)}，${E(R.src.rows[0].tag)}；已由 ${E(ST.tbl.units.force)}, ${E(ST.tbl.units.len)} 換算為 tf、tf·m）：<table><thead><tr><th class="l">Midas</th><th>Axial</th><th>Shear-y</th><th>Shear-z</th><th>Torsion</th><th>Moment-y</th><th>Moment-z</th></tr></thead><tbody>`
+          + `<tr><td class="l">原始</td>${['N','Vy','Vz','T','My','Mz'].map(k => `<td>${g3(R.raw.row[k])}</td>`).join('')}</tr>`
+          + `<tr><td class="l">→ 設計</td><td>P<sub>u</sub> ${g3(R.raw.out.Pu)}</td><td>V<sub>ux</sub> ${g3(R.raw.out.Vux)}</td><td>V<sub>uy</sub> ${g3(R.raw.out.Vuy)}</td><td>T<sub>u</sub> ${g3(R.raw.out.Tu)}</td><td>M<sub>ux</sub> ${g3(R.raw.out.Mux)}</td><td>M<sub>uy</sub> ${g3(R.raw.out.Muy)}</td></tr></tbody></table>`
+          + `<span class="mid-info">P<sub>u</sub> = −Axial（壓為正）；${$('midSwap').checked ? 'x／y 已對調：M<sub>ux</sub> ← Moment-z、V<sub>ux</sub> ← Shear-z' : 'M<sub>ux</sub> ← Moment-y（深度沿 H）、V<sub>uy</sub> ← Shear-z'}</span></div>` : '')
       + (R.notes.length ? `<div class="mt-1">${R.notes.join('；')}</div>` : '')
       + R.warnings.map(w => `<div style="color:var(--warn,#b45309)">${esc(w)}</div>`).join('')
       + `<div class="mid-info mt-1">Midas 內力為節點（中心線）處之值，柱面、支承面折減請自行處理。正負號與欄位對應尚待實機核對（docs/INTEGRATION.md §6）。</div>`);
@@ -11000,6 +11083,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
       for(const [k, v] of Object.entries(R.vals)) if(k in snap.values) snap.values[k] = String(v);
       if(tab==='beam') snap.bloads = R.loads; else snap.loads = R.loads;
       snap.loadsrc = {...(snap.loadsrc || {}), [tab]: R.src};
+      snap.review = null;                         // 新匯入的構件不沿用目前案件的審查紀錄
       const i = MEMBERS.findIndex(m => m.name===R.name && m.tab===tab);
       const rec = {id: i >= 0 ? MEMBERS[i].id : 'm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: R.name, tab, saved: snap.saved, snap};
       if(i >= 0){ MEMBERS[i] = rec; delete MEM_RES[rec.id]; } else MEMBERS.push(rec);

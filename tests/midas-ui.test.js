@@ -108,3 +108,56 @@ test('從載重組合視窗開啟：匯入視窗在最上層可操作，Esc 只�
   assert.deepEqual(st, {mid: false, load: true});
   await page.keyboard.press('Escape');
 });
+
+test('流程改善：原始列→設計列、底部摘要、沿用上次匯入設定', async () => {
+  await page.evaluate(() => { document.querySelectorAll('.ov-shell.open').forEach(o => o.classList.remove('open')); document.getElementById('tabPylon').click(); });
+  await load('pylon');
+  await page.check('#midGrpWrap input[data-g="0"]');
+  const prev = await page.textContent('#midPrev');
+  assert.match(prev, /原始列 → 設計列/); assert.match(prev, /極值篩選/);
+  const sum = await page.textContent('#midSum');
+  assert.match(sum, /內力表 38 列/); assert.match(sum, /排除 DL（單一工況）、cLCB3\(max\)（包絡）/); assert.match(sum, /極值篩選：將建立 5 列 × 1 個構件/);
+  await page.check('input[name=midSel][value=all]'); await page.check('#midSwap');
+  assert.match(await page.textContent('#midSum'), /全部組合/);
+  await page.click('#midApply'); await confirm();
+  await page.evaluate(() => window.midasImport.open('pylon'));
+  assert.equal(await page.isChecked('input[name=midSel][value=all]'), true, '沿用全部組合');
+  assert.equal(await page.isChecked('#midSwap'), true, '沿用 x／y 對調');
+  assert.match(await page.textContent('#midSum'), /已沿用上次匯入（P1_COL）的設定/);
+  await page.uncheck('#midSwap'); await page.check('input[name=midSel][value=ctrl]');
+  await page.click('#midApply'); await confirm();
+});
+
+test('流程改善：斷面與匯入時不同 → 計算書提示可能需回 Midas 重分析', async () => {
+  const before = await page.evaluate(() => { buildReport(MODEL || render()); return document.getElementById('report').innerText; });
+  assert.doesNotMatch(before, /斷面或材料已與匯入時不同/);
+  const after = await page.evaluate(() => { const el = document.getElementById('B'); el.value = '200'; el.dispatchEvent(new Event('input', {bubbles: true}));
+    buildReport(render()); const t = document.getElementById('report').innerText; el.value = '180'; el.dispatchEvent(new Event('input', {bubbles: true})); render(); return t; });
+  assert.match(after, /斷面或材料已與匯入時不同（外寬 180 → 200）/);
+  assert.match(after, /回 Midas 重分析/);
+});
+
+test('流程改善：開啟含審查紀錄的案件 → 通知、計算書修正紀錄、雜湊不含 review', async () => {
+  const d = await page.evaluate(() => { const c = caseSnapshot(); const h0 = inputHash();
+    c.values.tieSize = '#5';
+    c.review = {by: 'StructAudit-AI', at: '2026-11-07T12:00:00Z', source: 'P1.pdf', pairing: '已核對', status: 'pending-recalc',
+      changes: [{id: 'tieSize', label: '箍筋號數', unit: '', old: '#4', new: '#5'}], analysis: ''};
+    return {json: JSON.stringify(c), h0}; });
+  const fp = require('path').join(require('os').tmpdir(), 'review_case.json');
+  require('fs').writeFileSync(fp, d.json);
+  await page.setInputFiles('#caseFile', fp);
+  await page.waitForSelector('#askOv.open', {timeout: 5000});
+  for(let k = 0; k < 3 && !/審查建議/.test(await page.textContent('#askTtl')); k++){   // 先處理「尚未存檔」「構件清單」等確認
+    const go = await page.$('#askAct button:has-text("直接開啟")') || await page.$('#askAct button:has-text("以案件檔取代")') || await page.$('#askAct button.btn-primary');
+    await go.click(); await page.waitForTimeout(500);
+    await page.waitForSelector('#askOv.open', {timeout: 5000});
+  }
+  assert.match(await page.textContent('#askMsg'), /已以修改後的輸入重新計算|重新計算/);
+  assert.match(await page.textContent('#askMsg'), /箍筋號數（tieSize）：#4 → #5/);
+  await page.click('#askAct button.btn-primary');
+  const r = await page.evaluate(() => { buildReport(MODEL || render()); return {rp: document.getElementById('report').innerText, st: REVIEW && REVIEW.status,
+    same: (() => { const keep = REVIEW; const h1 = inputHash(); REVIEW = null; const h2 = inputHash(); REVIEW = keep; return h1 === h2; })()}; });
+  assert.match(r.rp, /審查修正紀錄/); assert.match(r.rp, /審查建議不等於設計已通過/);
+  assert.equal(r.st, 'recalculated');
+  assert.equal(r.same, true, 'review 不計入輸入雜湊');
+});

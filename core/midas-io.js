@@ -7,7 +7,7 @@
    ========================================================================= */
 'use strict';
 const MidasIO = (() => {
-  const VERSION = '2026.11-m2';
+  const VERSION = '2026.11-m3';
 
   /* ---------- 單位 ---------- */
   // 每 1 單位等於多少 kgf／cm
@@ -495,12 +495,31 @@ const MidasIO = (() => {
   }
 
   /* 匯入時載重表之指紋（判斷匯入後是否被手動修改） */
-  function loadsKey(loads){
-    return (loads || []).map(l => [l.name, l.pos || '', ...['Pu','Mux','Muy','Vux','Vuy','Tu','Mpos','Mneg','Vu'].map(k => l[k] == null ? '' : (+l[k]).toFixed(3))].join('|')).join(';');
+  /* 指紋 v2（交換契約，docs/INTEGRATION.md §3.3）：各數值換成千分之一的整數，四捨五入一律「半數往 +∞」，
+     非有限值記 NaN、過大記 OV。StructAudit-AI utils/rcmd.py 以同一規則實作，兩邊共用
+     tests/fixtures/loads_key_vectors.json 驗證。v1 以 toFixed(3) 表示，在 x.xxx5 恰為二進位可表示的值
+     （例如 1.0625）時與 Python 的捨入不同，會被誤判為「已修改」，只保留給舊案件比對。 */
+  const KEY_FIELDS = ['Pu','Mux','Muy','Vux','Vuy','Tu','Mpos','Mneg','Vu'];
+  function keyNum(v){
+    const x = Number(v);
+    if(!Number.isFinite(x)) return 'NaN';
+    const t = x*1000;
+    if(Math.abs(t) >= 9e15) return 'OV';
+    const r = Math.floor(t);
+    return String((t - r >= 0.5 ? r + 1 : r) + 0);
   }
+  function loadsKey(loads){
+    return 'k2:' + (loads || []).map(l => [String(l.name == null ? '' : l.name), l.pos || '',
+      ...KEY_FIELDS.map(k => l[k] == null ? '' : keyNum(l[k]))].join('|')).join(';');
+  }
+  function loadsKeyV1(loads){
+    return (loads || []).map(l => [l.name, l.pos || '', ...KEY_FIELDS.map(k => l[k] == null ? '' : (+l[k]).toFixed(3))].join('|')).join(';');
+  }
+  /* 匯入後載重表是否被修改：依記錄時的指紋版本比對 */
+  const loadsEdited = (loads, key) => String(key || '').startsWith('k2:') ? loadsKey(loads) !== key : loadsKeyV1(loads) !== key;
 
   return {VERSION, unitOf, forceK, lenK, expandList, parseMct, parseSection, fcFromName, sectionToRc, parsePart, isEnvelope,
-          parseForceTable, memberInfo, columnLoads, beamLoads, deadAxial, loadsKey,
+          parseForceTable, memberInfo, columnLoads, beamLoads, deadAxial, loadsKey, loadsKeyV1, loadsEdited, keyNum,
           isPlateTable, parsePlateTable, parseAnyTable, woodArmer, slabLoads, plateInfo};
 })();
 
