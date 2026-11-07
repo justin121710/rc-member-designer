@@ -67,3 +67,29 @@ test('梁：建立到構件清單（群組選取不沿用柱）', async () => {
   assert.equal(m.length, 1);
   assert.deepEqual(m[0], {tab: 'beam', bw: '220', bh: '200', bType: 'rect', loads: [['cLCB1', 150, 480, 210], ['cLCB2', 140, 450, 220]], src: 'P1_CAP'});
 });
+
+test('版（M2）：Plate Force 在柱模組提示改用梁／版模組；梁／版模組建立單位寬版構件', async () => {
+  const loadPlate = async mod => {
+    await page.evaluate(m => window.midasImport.open(m), mod);
+    await page.setInputFiles('#midMctFile', path.join(FIX, 'midas_slab.mct'));
+    await page.waitForFunction(() => /結構群組 1/.test(document.getElementById('midMctInfo').textContent));
+    await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'midas_plate_force.txt'), 'utf8'));
+    await page.click('#midTblRead');
+  };
+  await loadPlate('pylon');
+  assert.match(await page.textContent('#midTblInfo'), /版內力/);
+  await page.check('#midGrpWrap input[data-g="0"]');
+  assert.match(await page.textContent('#midPrev'), /梁／版/);
+  assert.equal(await page.isDisabled('#midApply'), true);
+  await page.click('#midClose');
+  await page.evaluate(() => document.getElementById('tabBeam').click());
+  await loadPlate('beam');
+  assert.equal(await page.isVisible('#midDir'), true);
+  await page.check('#midGrpWrap input[data-g="0"]');
+  await page.click('#midApply'); await confirm();
+  const r = await page.evaluate(() => ({type: document.getElementById('bType').value, h: +document.getElementById('bh').value,
+    loads: BLOADS.map(l => [l.name, l.Mpos, l.Mneg, l.Vu]), kind: LOADSRC.beam.kind}));
+  assert.deepEqual(r, {type: 'slab', h: 30, loads: [['cLCB1', 11.8, 6.5, 9], ['cLCB2', 9, 4, 10]], kind: 'plate'});
+  const rp = await page.evaluate(() => { buildBeamReport(BMODEL || renderBeam()); return document.getElementById('report').innerText; });
+  assert.match(rp, /Wood-Armer/); assert.match(rp, /S1_DECK/);
+});

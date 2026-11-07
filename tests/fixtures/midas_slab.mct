@@ -1,0 +1,20 @@
+; 測試用版模型（tests/midas.test.js）：S1_DECK 版元素 301–302，厚 0.30 m
+*UNIT
+   TONF, M, KCAL, C
+*NODE
+   11, 0, 0, 0
+   12, 2, 0, 0
+   13, 4, 0, 0
+   14, 0, 2, 0
+   15, 2, 2, 0
+   16, 4, 2, 0
+*ELEMENT
+   301, PLATE, 1, 1, 11, 12, 15, 14, 1, 0
+   302, PLATE, 1, 1, 12, 13, 16, 15, 1, 0
+*MATERIAL
+   1, CONC , C280, 0, 0, , C, NO, 0.05, 1, TWN-USD100(RC), , C280
+*THICKNESS
+   1, VALUE, 1, YES, 0.3, 0, NO, 0, 0
+   2, VALUE, YES, 0.25, 0
+*GROUP
+   S1_DECK, 11to16, 301to302, 0

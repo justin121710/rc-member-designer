@@ -86,7 +86,7 @@
 - `core/midas-io.js`：純函式（不碰 DOM），網頁與 Node 測試共用。
 - 「從 Midas 匯入」對話框（柱、梁兩模組的載重卡片）：.mct（選填）＋內力表（貼上／.txt／.csv／.xlsx）→ 選群組 → 預覽 → 套用或批次建立構件。
 - 案件檔 `loadsrc` 與計算書「內力來源」。
-- M2：Plate Force → 單位寬版（Wood-Armer，$M_x^* = M_x + |M_{xy}|$ 等）。
+- M2（完成）：Plate Force → 單位寬版（Wood-Armer，$M_x^* = M_x + |M_{xy}|$ 等）。
 - M3：配筋 MCT 輸出。
 
 ### midas-curve-gen
@@ -103,7 +103,7 @@
 | 里程碑 | 內容 | 驗收標準 |
 |---|---|---|
 | **M1（已完成 2026-11-07）** | Midas 內力＋.mct → 設計工具（柱、梁、基樁） | `tests/midas.test.js` 10 項（解析、單位、正負號、控制組合）、`tests/midas-ui.test.js` 3 項（貼表、選群組、套用、批次建立構件、計算書內力來源、案件檔清理）；教學與常見問題補文字（截圖待合併 main 時重建，之後可在 build.js 加拍匯入視窗） |
-| M2 | 版（Plate Force、Wood-Armer） | 手算例題吻合 |
+| **M2（已完成 2026-11-07）** | 版（Plate Force、Wood-Armer） | `midas.test.js` 加 4 項（Wood-Armer 六種情況手算、每公尺版帶單位換算、`*THICKNESS`、x／y 向控制組合與膜力警示）；`midas-ui.test.js` 加 1 項 |
 | M3 | 配筋 → Midas MCT | 使用者在 Midas 2022 實機匯入成功（實機驗證） |
 | M4 | StructAudit-AI 讀內力來源 | 範例計算書審查報告引用來源 |
 | M5 | midas-curve-gen 群組命名指引 | README／SPEC 更新 |
@@ -120,5 +120,8 @@
 | V5 | `*SECTION` DBUSER 的 SB、SR、B 資料順序 | SB：H, B；SR：D；B：H, B, tw, tf1, C, tf2 |
 | V6 | 包絡組合在表格中的列名 | 名稱後綴 `(max)`／`(min)` |
 | V7 | Rebar Input 的 MCT 語法 | 未知（M3 前需要範例） |
+| V8 | Plate Force 表格標題（Elem、Load、Node、Fxx…Vyy）與單位寫法（tonf*m/m） | 依標題名稱辨識；彎矩每公尺版帶＝數值 × 力單位，與長度單位無關 |
+| V9 | 版彎矩 Mxx 正負號 | 正值＝下緣（−z 側）受拉；介面可切換 |
+| V10 | `*THICKNESS` 欄位 | `iTHK, VALUE, [整數], YES/NO, THIK-IN, ...`：取 YES／NO 之後第一個正數 |
 
 使用者提供實機檔案後：補測試案例、修正假設、刪除本表對應列。

@@ -122,3 +122,49 @@ test('載重指紋', () => {
   const a = [{name: 'A', Pu: 1, Mux: 2}], b = [{name: 'A', Pu: 1, Mux: 2.0004}], c = [{name: 'A', Pu: 1, Mux: 2.1}];
   assert.equal(M.loadsKey(a), M.loadsKey(b)); assert.notEqual(M.loadsKey(a), M.loadsKey(c));
 });
+
+/* ---------- 版（M2）：Plate Force、Wood-Armer ---------- */
+const SMCT = fs.readFileSync(path.join(FIX, 'midas_slab.mct'), 'utf8');
+const PTBL = fs.readFileSync(path.join(FIX, 'midas_plate_force.txt'), 'utf8');
+
+test('Wood-Armer：四種情況（手算）', () => {
+  const w = (a, b, c) => { const r = M.woodArmer(a, b, c); return [r.xb, r.yb, r.xt, r.yt].map(v => Math.round(v*1000)/1000 + 0); };
+  assert.deepEqual(w(10, 4, 3), [13, 7, 0, 0]);
+  assert.deepEqual(w(10, -5, 3), [11.8, 0, 0, -5.9]);        // 下層 y 向 < 0 → M_x* = M_x + |M_xy²/M_y|；上層 x 向 > 0 → M_y* = M_y − |M_xy²/M_x|
+  assert.deepEqual(w(-2, 8, 4), [2, 12, -4, 0]);
+  assert.deepEqual(w(-6, 8, 2), [0, 8.667, -6.5, 0]);
+  assert.deepEqual(w(-3, -2, 1), [0, 0, -4, -3]);
+  assert.deepEqual(w(0, 0, 5), [5, 5, -5, -5]);
+});
+
+test('版內力表：自動判別、單位（每公尺版帶）、續列沿用', () => {
+  assert.equal(M.isPlateTable(PTBL), true); assert.equal(M.isPlateTable(TBL), false);
+  const t = M.parseAnyTable(PTBL);
+  assert.equal(t.kind, 'plate'); assert.ok(t.ok, t.why);
+  assert.deepEqual(t.loads, ['cLCB1', 'cLCB2']);
+  assert.equal(t.rows.filter(r => r.elem === 302).length, 6);
+  const k = M.parsePlateTable('Elem,Load,Node,Mxx (kN*cm/cm),Myy (kN*cm/cm),Mxy (kN*cm/cm),Vxx (kN/cm),Vyy (kN/cm)\n1,A,5,9.80665,0,0,0.0980665,0');
+  near(k.rows[0].Mxx, 1, 1e-9, '9.80665 kN·cm/cm = 1 tf·m/m'); near(k.rows[0].Vxx, 1, 1e-9, '0.0980665 kN/cm = 1 tf/m');
+  assert.equal(M.parseAnyTable(TBL).kind, 'beam');
+});
+
+test('MCT：版元素與厚度', () => {
+  const m = M.parseMct(SMCT);
+  assert.deepEqual(m.elems[301].ns, [11, 12, 15, 14]);
+  assert.equal(m.thick[1], 0.3); assert.equal(m.thick[2], 0.25);
+  const pi = M.plateInfo([301, 302], m); near(pi.thickness, 30, 1e-9, '厚度 cm');
+});
+
+test('版：x、y 向 Wood-Armer 控制組合與膜力警示', () => {
+  const m = M.parseMct(SMCT), t = M.parsePlateTable(PTBL);
+  const x = M.slabLoads(t, [301, 302], m, {dir: 'x'});
+  const c1 = x.loads.find(l => l.name === 'cLCB1'), c2 = x.loads.find(l => l.name === 'cLCB2');
+  assert.deepEqual([c1.Mpos, c1.Mneg, c1.Vu], [11.8, 6.5, 9]);
+  assert.deepEqual([c2.Mpos, c2.Mneg, c2.Vu], [9, 4, 10]);
+  assert.ok(x.ctrl.some(c => c.load === 'cLCB1' && c.tag === 'E302-N12' && /M_u⁻/.test(c.why)));
+  assert.ok(x.warnings.some(w => /膜力/.test(w)));
+  const y = M.slabLoads(t, [301, 302], m, {dir: 'y', loads: ['cLCB1']});
+  assert.deepEqual([y.loads[0].Mpos, y.loads[0].Mneg, y.loads[0].Vu], [12, 5.9, 3]);
+  const f = M.slabLoads(t, [301, 302], m, {dir: 'x', loads: ['cLCB1'], sagPos: false});
+  assert.ok(f.loads[0].Mpos !== 11.8, '正負號切換');
+});

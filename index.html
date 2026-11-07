@@ -519,7 +519,7 @@ body .tb-setup:hover{border-color:var(--acc);background:var(--acc-soft)}
 .mid-opts label,.mid-loads label,.mid-grps label{display:inline-flex;gap:4px;align-items:center}
 .mid-opts input[type=checkbox],.mid-opts input[type=radio],.mid-loads input,.mid-grps input{width:15px;height:15px;margin:0;flex:0 0 15px}
 .mid-loads,.mid-grps{display:flex;flex-wrap:wrap;gap:4px 14px;max-height:120px;overflow-y:auto}
-#midOv.m-col .mid-beam,#midOv.m-beam .mid-col{display:none}
+#midOv.m-col .mid-beam,#midOv.m-beam .mid-col,#midOv:not(.k-plate) .mid-plate,#midOv.k-plate .mid-noplate{display:none}
 #midPrev table{font-size:12px}
 .mid-opts select{width:auto;min-width:0}
 .mid-opts label{white-space:nowrap}
@@ -804,7 +804,7 @@ img,video{max-width:100%;height:auto}
         <div class="flex gap-2 mt-1" style="align-items:center;flex-wrap:wrap"><input id="midMctFile" type="file" accept=".mct,.txt"><span id="midMctInfo" class="mid-info"></span></div>
       </div>
       <div class="mid-step"><b>2. 內力表</b>
-        <span class="imp-note">Results &gt; Result Tables &gt; Beam &gt; Force：在表格上全選複製（含標題列）貼到下方，或選 .txt／.csv／.xlsx 檔。只用一般載重組合（同時內力）；包絡組合預設不勾選。</span>
+        <span class="imp-note">Results &gt; Result Tables &gt; Beam &gt; Force（梁、柱、基樁），或 Plate &gt; Force（版，單位寬內力；在梁／版模組匯入）：在表格上全選複製（含標題列）貼到下方，或選 .txt／.csv／.xlsx 檔。只用一般載重組合（同時內力）；包絡組合預設不勾選。</span>
         <textarea id="midTblBox" rows="4" class="w-full mt-1 text-[12px] p-2 rounded" style="background:var(--panel);border:1px solid var(--line);color:var(--txt)"
           placeholder="Elem&#9;Load&#9;Part&#9;Axial (tonf)&#9;Shear-y (tonf)&#9;Shear-z (tonf)&#9;Torsion (tonf*m)&#9;Moment-y (tonf*m)&#9;Moment-z (tonf*m)"></textarea>
         <div class="flex gap-2 mt-1" style="align-items:center;flex-wrap:wrap">
@@ -820,11 +820,12 @@ img,video{max-width:100%;height:auto}
           <label><input type="radio" name="midSel" value="ctrl" checked> 只列控制組合</label>
           <label><input type="radio" name="midSel" value="all"> 列出全部勾選的組合</label>
           <label class="mid-col"><input type="checkbox" id="midSwap"> x／y 對調（Midas 局部 y、z 與本工具 B、H 方向相反時）</label>
-          <label class="mid-beam">Midas 正 M<sub>y</sub>：<select id="midSag"><option value="1">下緣受拉（M<sub>u</sub><sup>+</sup>）</option><option value="0">上緣受拉（M<sub>u</sub><sup>−</sup>）</option></select></label>
+          <label class="mid-plate">版配筋方向：<select id="midDir"><option value="x">x 向（M<sub>xx</sub>、V<sub>xx</sub>）</option><option value="y">y 向（M<sub>yy</sub>、V<sub>yy</sub>）</option></select></label>
+          <label class="mid-beam">Midas 正 M<sub>y</sub>／M<sub>xx</sub>：<select id="midSag"><option value="1">下緣受拉（M<sub>u</sub><sup>+</sup>）</option><option value="0">上緣受拉（M<sub>u</sub><sup>−</sup>）</option></select></label>
           <label class="mid-col">靜載重軸力 P<sub>D</sub> 取自：<select id="midPD"><option value="">不填</option></select></label>
-          <label><input type="checkbox" id="midSec" checked> 套用 .mct 斷面尺寸</label>
+          <label><input type="checkbox" id="midSec" checked> 套用 .mct 斷面尺寸<span class="mid-plate">（版厚）</span></label>
           <label><input type="checkbox" id="midFc"> 套用材料名稱中的 f'<sub>c</sub></label>
-          <label><input type="checkbox" id="midLen"> 以構件長度填入 <span class="mid-col">l<sub>u</sub></span><span class="mid-beam">跨度 L</span>（中心線長，請再改為淨長）</label>
+          <label class="mid-noplate"><input type="checkbox" id="midLen"> 以構件長度填入 <span class="mid-col">l<sub>u</sub></span><span class="mid-beam">跨度 L</span>（中心線長，請再改為淨長）</label>
         </div>
         <div class="mt-2"><b>載重</b> <span class="imp-note">（取消勾選不用於設計者，例如單一載重工況）</span> <button id="midLdAll" type="button" class="!py-0.5 !px-2">全選</button> <button id="midLdNone" type="button" class="!py-0.5 !px-2">全不選</button>
           <div id="midLoads" class="mid-loads mt-1"></div></div>
@@ -5501,6 +5502,7 @@ function loadSrcClean(x){
   for(const k of ['pylon','beam']){ const a = x[k]; if(!a || typeof a!=='object') continue;
     const arr = (v, fn) => Array.isArray(v) ? v.slice(0, 500).filter(q => q && typeof q==='object').map(fn) : [];
     out[k] = {from: 'midas', at: S(a.at, 40), mct: S(a.mct), table: S(a.table), group: S(a.group), elems: S(a.elems, 400), units: S(a.units, 40),
+      kind: a.kind==='plate' ? 'plate' : 'beam', dir: a.dir==='y' ? 'y' : 'x',
       mode: a.mode==='all' ? 'all' : 'ctrl', swap: !!a.swap, sagPos: a.sagPos!==false, pd: S(a.pd), tb: S(a.tb, 300), key: S(a.key, 20000),
       rows: arr(a.rows, q => ({name: S(q.name), pos: S(q.pos, 8), tag: S(q.tag, 300)})),
       ctrl: arr(a.ctrl, q => ({why: S(q.why, 60), load: S(q.load), tag: S(q.tag, 60), v: caseNum(q.v)})),
@@ -5519,7 +5521,8 @@ function rpLoadSrc(mod){
   return `<div class="rp-h3">內力來源</div>`
     + `<div class="rp-note">本表載重組合由 Midas Civil 結果表格匯入（${nesc((a.at||'').replace('T',' ').slice(0,16))}）：內力表 <b>${nesc(a.table||'貼上')}</b>（單位 ${nesc(a.units)}，已換算為 tf、tf·m）`
     + `${a.mct ? `、模型 <b>${nesc(a.mct)}</b>` : ''}；構件 ${a.group ? `結構群組 <b>${nesc(a.group)}</b>、` : ''}元素 ${nesc(a.elems)}${a.tb ? `，${nesc(a.tb)}` : ''}。`
-    + (mod==='beam' ? `Midas 正 M_y 視為${a.sagPos?'下緣':'上緣'}受拉。` : `P_u = −Axial、M_ux = Moment-y、M_uy = Moment-z、V_uy = Shear-z、V_ux = Shear-y${a.swap?'（x、y 已對調）':''}。`)
+    + (a.kind==='plate' ? `版內力（Plate Force）取 ${a.dir} 向 Wood-Armer 設計彎矩 \\(M_{${a.dir}}^{*}=M_{${a.dir}${a.dir}}\\pm|M_{xy}|\\)（及其修正式），Midas 正 M 視為${a.sagPos?'下緣':'上緣'}受拉；剪力取 \\(|V_{${a.dir}${a.dir}}|\\)；每公尺版帶。`
+       : mod==='beam' ? `Midas 正 M_y 視為${a.sagPos?'下緣':'上緣'}受拉。` : `P_u = −Axial、M_ux = Moment-y、M_uy = Moment-z、V_uy = Shear-z、V_ux = Shear-y${a.swap?'（x、y 已對調）':''}。`)
     + `${a.mode==='all' ? '列出全部勾選組合。' : '只列控制組合'}；控制條件：${ctrl}。${a.pd ? `靜載重軸力 P_D 取自載重 ${nesc(a.pd)}。` : ''}`
     + (edited ? ' <b>匯入後載重表已修改，以表內數值為準。</b>' : '') + `</div>`
     + (rows ? `<table class="no-break"><thead><tr><th class="l">組合</th><th class="l">位置</th><th class="l">Midas 來源（元素-端點）</th></tr></thead><tbody>${rows}</tbody></table>` : '');
@@ -10808,8 +10811,9 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   function readTable(){
     if(SRC == null) return;
     const fb = !$('midUnitRow').classList.contains('hidden') ? {force: $('midUF').value, len: $('midUL').value} : (ST.mct && ST.mct.unit) || null;
-    const t = MidasIO.parseForceTable(SRC, fb);
+    const t = MidasIO.parseAnyTable(SRC, fb);
     ST.tbl = t;
+    ov.classList.toggle('k-plate', t.kind==='plate');
     const info = $('midTblInfo');
     if(!t.ok){
       if(t.needUnit) $('midUnitRow').classList.remove('hidden');
@@ -10817,7 +10821,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     }else{
       const sk = t.skipped.length ? `；略過 ${t.skipped.length} 行（${t.skipped.slice(0, 5).map(q => `第 ${q.n} 行 ${E(q.why)}`).join('、')}${t.skipped.length > 5 ? '…' : ''}）` : '';
       const us = t.units.src.force==='header' && t.units.src.len==='header' ? '取自標題列' : '標題列沒有單位，採用' + (ST.mct && ST.mct.unit ? ' .mct 的 *UNIT' : '下拉選單');
-      info.innerHTML = SB(`${E(ST.tblName || '貼上的表格')}：${t.rows.length} 列、元素 ${new Set(t.rows.map(r => r.elem)).size} 個、載重 ${t.loads.length} 個；單位 ${E(t.units.force)}, ${E(t.units.len)}（${us}）${sk}`
+      info.innerHTML = SB(`${E(ST.tblName || '貼上的表格')}：${t.kind==='plate' ? '<b>版內力（Plate Force）</b>，' : ''}${t.rows.length} 列、元素 ${new Set(t.rows.map(r => r.elem)).size} 個、載重 ${t.loads.length} 個；單位 ${E(t.units.force)}, ${E(t.units.len)}（${us}）${sk}`
         + t.warnings.map(w => `<br><span style="color:var(--warn,#b45309)">${E(w)}</span>`).join(''));
     }
     buildLoads(); refresh();
@@ -10866,6 +10870,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   /* ---------- 計算一個構件的匯入結果 ---------- */
   function compute(mem){
     const opts = {loads: chosenLoads(), all: ov.querySelector('input[name=midSel]:checked').value==='all'};
+    if(ST.tbl.kind==='plate') return computePlate(mem, opts);
     const r = ST.mod==='beam'
       ? MidasIO.beamLoads(ST.tbl, mem.elems, ST.mct, {...opts, sagPos: $('midSag').value==='1'})
       : MidasIO.columnLoads(ST.tbl, mem.elems, ST.mct, {...opts, swap: $('midSwap').checked});
@@ -10909,10 +10914,29 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     return {name, loads: r.loads, ctrl: r.ctrl, warnings: r.warnings, vals, notes, src};
   }
 
+  /* 版：Wood-Armer 換算後之單位寬（1 m）設計彎矩；版厚取自 .mct *THICKNESS */
+  function computePlate(mem, opts){
+    const dir = $('midDir').value, sagPos = $('midSag').value==='1';
+    const r = MidasIO.slabLoads(ST.tbl, mem.elems, ST.mct, {...opts, dir, sagPos});
+    const vals = {bType: 'slab'}, notes = ['斷面型式改為單位寬版（b = 100 cm）'];
+    const mi = r.info || {};
+    if($('midSec').checked && Number.isFinite(mi.thickness)){ vals.bh = Math.round(mi.thickness); notes.push(`版厚 h = ${vals.bh} cm`); }
+    else if($('midSec').checked && ST.mct) notes.push('.mct 沒有這些版元素的厚度，版厚未套用。');
+    if(ST.mct && $('midFc').checked && mi.mats && mi.mats.length){
+      const mt = ST.mct.mats[mi.mats[0]], fc = mt && MidasIO.fcFromName(mt.name);
+      if(fc){ vals.bfc = fc; notes.push(`f'_c = ${fc} kgf/cm²（材料「${E(mt.name)}」）`); }
+    }
+    const src = {from: 'midas', kind: 'plate', dir, at: new Date().toISOString(), mct: ST.mctName, table: ST.tblName || '貼上', group: ST.mct ? mem.name : '',
+      elems: idList(mem.elems), units: `${ST.tbl.units.force}, ${ST.tbl.units.len}`, mode: opts.all ? 'all' : 'ctrl', swap: false, sagPos, pd: '', tb: '',
+      rows: r.src, ctrl: r.ctrl, warn: r.warnings, key: MidasIO.loadsKey(r.loads)};
+    return {name: mem.name, loads: r.loads, ctrl: r.ctrl, warnings: r.warnings, vals, notes, src};
+  }
   function preview(){
     const mems = members(), P = $('midPrev');
     $('midApply').disabled = mems.length !== 1; $('midBatch').disabled = !mems.length;
     if(!ST.tbl || !ST.tbl.ok){ P.innerHTML = ''; $('midPrevNote').textContent = ''; return; }
+    if(ST.tbl.kind==='plate' && ST.mod!=='beam'){ $('midApply').disabled = $('midBatch').disabled = true;
+      P.innerHTML = '<span style="color:var(--bad)">這是版內力（Plate Force），請到「梁／版」模組的載重表按「從 Midas 匯入」。</span>'; return; }
     if(!mems.length){ P.innerHTML = '<span class="mid-info">勾選一個以上的構件。</span>'; $('midPrevNote').textContent = ''; return; }
     const R = compute(mems[0]);
     $('midPrevNote').textContent = mems.length > 1 ? `（顯示第 1 個：${mems[0].name}；共 ${mems.length} 個構件）` : `（${mems[0].name || '構件'}）`;

@@ -1,0 +1,13 @@
+Elem	Load	Node	Fxx (tonf/m)	Fyy (tonf/m)	Fxy (tonf/m)	Mxx (tonf*m/m)	Myy (tonf*m/m)	Mxy (tonf*m/m)	Vxx (tonf/m)	Vyy (tonf/m)
+301	cLCB1	11	0	0	0	10	-5	3	6	2
+		12	0	0	0	-2	8	4	4	1
+		15	0	0	0	1	1	0	1	1
+		14	0	0	0	0	0	0	0	0
+302	cLCB1	12	0	0	0	-6	8	2	9	3
+		13	0	0	0	2	1	0	1	1
+		16	0	0	0	1	1	0	1	1
+		15	0	0	0	1	1	0	1	1
+301	cLCB2	11	5	0	0	8	2	1	10	2
+		12	5	0	0	-3	2	1	2	1
+302	cLCB2	12	5	0	0	-4	2	0	3	1
+		13	5	0	0	1	1	0	1	1
