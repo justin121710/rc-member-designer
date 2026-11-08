@@ -21,3 +21,6 @@
 - 與 midas-curve-gen、Midas Civil、StructAudit-AI、書稿的串接規格見 `docs/INTEGRATION.md`；「從 Midas 匯入」的解析在 `core/midas-io.js`（測試 `tests/midas.test.js`、`tests/midas-ui.test.js`）。
 - 計算書「內力來源」段落的文字由 StructAudit-AI `utils/calcbook.py` 擷取；改寫該段文字（`rpLoadSrc`）或案件檔 `loadsrc` 欄位時，同步修改 StructAudit-AI 並重產其示範檔（`examples/make_sample_midas.js`）。
 - 匯入對話框或計算書版面改變時，重拍書稿截圖 `shots/f_rcmd_import.png`、`shots/f_rcmd_src.png`（書稿第 66 章）。
+- 載重指紋 v2（`loadsKey`）與 StructAudit-AI `loads_key` 必須一致：`tests/fixtures/loads_key_vectors.json` 與其 `tests/data/` 的同名檔是同一份，改規則時兩邊一起改。
+- `inputHash`（計算書表頭「輸入 SHA-256」）不計 `saved`、`members`、`conf`、`review`；StructAudit-AI `utils/pairing.py` 以同一規則重算配對，改快照欄位時要同步。
+- 案件檔 `review` 區塊由 StructAudit-AI 寫入（契約 `docs/INTEGRATION.md` §3.4）：開啟時通知並重算，計算書列「審查修正紀錄」。
