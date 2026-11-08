@@ -1,8 +1,8 @@
-82371b1cb1f89ebbb343bc0bf2ffae32c519ee85  index.html
+b7773e3bcf02a69a32f91f296b38c30f35faa737  index.html
 5bf08fe41ca611082ceda06ea2080a65d7b387f8  calc-xlsx.js
-d209c863776f63f9597a34d3eb227b11cf1b8afc  docs/tutorial/tutorial.html
-3118cdf03ff9777dc5ca73bc412972dc229f4514  docs/tutorial/faq.html
-411ddcee57d071cef09f2fd961b6a4ee10171205  docs/tutorial/build.js
+b2b430500d3c9a2cf8da34d89fddbe8858a32b45  docs/tutorial/tutorial.html
+4fa5285516a96106cefe2a03f7ae2a566edd7cfb  docs/tutorial/faq.html
+82de356a113e3edd8335749a37b3c3aa102b5155  docs/tutorial/build.js
 e05bd6c20a0d6200855a2ba67c7a4bcc70f1339c  docs/tutorial/inputs.txt
 5f4c9b5b72c3e9a604b65b9dec7d08725082879b  core/rc-core.js
 3ef759cceea290b2298d090671ceb30124ee7b75  core/midas-io.js
