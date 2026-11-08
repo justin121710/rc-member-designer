@@ -86,11 +86,12 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
   <div class="q long"><h3>Q2. 一個斷面從頭到尾的標準操作流程是什麼？</h3>
   <figure class="half"><img src="img/01-setup.png"><figcaption>圖 1　開場的「設計對象」視窗</figcaption></figure>
   <ol>
-    <li>開啟頁面後跳出「設計對象」視窗（圖 1）：選構件類型 <span class="n">1</span>、斷面型式 <span class="n">2</span>、預設範本 <span class="n">3</span>，填構件名稱 <span class="n">4</span>，選設計依據 <span class="n">5</span> 與環境 <span class="n">6</span>，並確認主要尺寸 <span class="n">7</span>。接著按「下一步」<span class="n">9</span> 輸入載重組合，再於第 ③ 步選一組建議配筋套用，即進入主畫面；不需要建議時按「直接進入主畫面」<span class="n">8</span>。之後可由左上角按鈕隨時變更。</li>
+    <li>開啟頁面後先選「要完成哪一件事」：從 Midas 結果開始設計（直接開匯入視窗，見 Q7a）、手動驗算、繼續已有案件、審查。以下為「手動驗算」。</li>
+    <li>跳出「設計對象」視窗（圖 1）：選構件類型 <span class="n">1</span>、斷面型式 <span class="n">2</span>、預設範本 <span class="n">3</span>，填構件名稱 <span class="n">4</span>，選設計依據 <span class="n">5</span> 與環境 <span class="n">6</span>，並確認主要尺寸 <span class="n">7</span>。接著按「下一步」<span class="n">9</span> 輸入載重組合，再於第 ③ 步選一組建議配筋套用，即進入主畫面；不需要建議時按「直接進入主畫面」<span class="n">8</span>。之後可由左上角按鈕隨時變更。</li>
     <li>在中間參數表依左側導軌逐組修改尺寸、材料、配筋（或用「從圖說匯入」帶入）。</li>
     <li>在「載重組合」輸入或貼上 CSV；柱另在「長細效應」群組設定側向位移支撐、\(k\) 與 \(M_1/M_2\)。</li>
     <li>看頂列下方的判定膠囊（撓曲 \(D/C\)、剪力、箍筋、\(\rho_g\)、淨距、警示數），點膠囊會跳到對應結果卡片。</li>
-    <li>到「警示」分頁逐項處理 ✗ 不符與 ! 注意；點訊息旁的參數按鈕可直接跳到該輸入格。</li>
+    <li>看判定列下方的「工作檢視」：「先處理」列出第一個不合格項目與相關欄位，可直接修改；「上次 → 本次」顯示改完判定怎麼變。也可到「警示」分頁逐項處理 ✗ 不符與 ! 注意；點訊息旁的參數按鈕可直接跳到該輸入格。</li>
     <li>確認「軸向配置」「伸展長度」分頁的配置與檢核。</li>
     <li>「預覽報告」檢查計算書，再「列印／存成 PDF」或「匯出 Excel」。</li>
     <li>「儲存案件」下載 <code>.json</code> 留存或交付複核。</li>
@@ -150,8 +151,9 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
   <li>包絡組合（名稱含 (max)／(min)）與單一工況預設不勾選。</li>
   <li>可順便套用 .mct 的斷面尺寸、材料名稱中的 \(f'_c\)，以及靜載重軸力 \(P_D\)。</li>
   <li>版：在梁／版模組貼 Plate Force 表格，選配筋方向，工具以 Wood-Armer 把 \(M_{xy}\) 併入兩向設計彎矩（每公尺版帶），版厚取自 .mct。</li>
-  <li>計算書載重表後會列「內力來源」：每列來自哪個元素哪一端、依哪個分量篩選；斷面或材料與匯入時不同時，會提示可能需回 Midas 重分析。</li></ul>
-  <figure class="half"><img src="img/08c-midas-prev.png"><figcaption>圖 8b　匯入預覽：<span class="n">1</span> 載重勾選、<span class="n">2</span> 控制組合與來源（元素-端點）</figcaption></figure>
+  <li>計算書載重表後會列「內力來源」：每列來自哪個元素哪一端、依哪個分量篩選；斷面或材料與匯入時不同時，會提示可能需回 Midas 重分析。</li>
+  <li>視窗標題列標出 ① 提供資料 → ② 確認對應 → ③ 建立構件；資料讀好後收成一行摘要，底部寫明「套用」會覆寫什麼、「建立」會新增或更新哪些構件。第一次用可按「用 P1 墩柱範例」。</li></ul>
+  <figure class="half"><img src="img/08c-midas-prev.png"><figcaption>圖 8b　匯入預覽：<span class="n">1</span> 已讀資料摘要、<span class="n">2</span> 結構群組、<span class="n">3</span> 載重勾選、<span class="n">4</span> 預覽、<span class="n">5</span> 按下去會改什麼</figcaption></figure>
   <p>表格欄位與正負號依公開資料實作，第一次使用請拿一根構件與 Midas 結果對照。</p></div>
 
   <div class="q"><h3>Q8. 載重全部填好了，為什麼控制剪力的組合不是 \(V_u\) 最大的那組？</h3>

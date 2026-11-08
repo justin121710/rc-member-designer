@@ -14,6 +14,7 @@ test.after(async () => { if(app){ assert.deepEqual(app.errors, [], '頁面不得
 
 async function load(mod){
   await page.evaluate(m => window.midasImport.open(m), mod);
+  if(await page.isVisible('#midSrcEdit')) await page.click('#midSrcEdit');   // 上次讀過的資料收成一行：展開再換檔
   await page.setInputFiles('#midMctFile', path.join(FIX, 'midas_pier.mct'));
   await page.waitForFunction(() => /結構群組 2/.test(document.getElementById('midMctInfo').textContent));
   await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'midas_beam_force.txt'), 'utf8'));
@@ -71,6 +72,7 @@ test('梁：建立到構件清單（群組選取不沿用柱）', async () => {
 test('版（M2）：Plate Force 在柱模組提示改用梁／版模組；梁／版模組建立單位寬版構件', async () => {
   const loadPlate = async mod => {
     await page.evaluate(m => window.midasImport.open(m), mod);
+    if(await page.isVisible('#midSrcEdit')) await page.click('#midSrcEdit');
     await page.setInputFiles('#midMctFile', path.join(FIX, 'midas_slab.mct'));
     await page.waitForFunction(() => /結構群組 1/.test(document.getElementById('midMctInfo').textContent));
     await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'midas_plate_force.txt'), 'utf8'));
@@ -99,10 +101,12 @@ test('從載重組合視窗開啟：匯入視窗在最上層可操作，Esc 只�
   await page.click('#btnLoads'); await page.waitForTimeout(300);
   assert.equal(await page.evaluate(() => document.getElementById('loadOv').classList.contains('open')), true);
   await page.click('#btnMidas'); await page.waitForTimeout(200);
+  if(await page.isVisible('#midSrcEdit')) await page.click('#midSrcEdit');
   await page.click('#midTblRead', {timeout: 3000});      // 被下層視窗遮住時會逾時
-  const top = await page.evaluate(() => { const b = document.getElementById('midTblRead').getBoundingClientRect();
+  // 讀表後來源段收成一行（midTblRead 隱藏），改以標題列的「關閉」確認視窗在最上層
+  const top = await page.evaluate(() => { const b = document.getElementById('midClose').getBoundingClientRect();
     return document.elementFromPoint(b.left + b.width/2, b.top + b.height/2).id; });
-  assert.equal(top, 'midTblRead');
+  assert.equal(top, 'midClose');
   await page.keyboard.press('Escape'); await page.waitForTimeout(100);
   const st = await page.evaluate(() => ({mid: document.getElementById('midOv').classList.contains('open'), load: document.getElementById('loadOv').classList.contains('open')}));
   assert.deepEqual(st, {mid: false, load: true});
@@ -150,12 +154,20 @@ test('團隊共用：案件檔名帶構件與輸入雜湊、構件總表含輸�
   assert.equal(await page.evaluate(() => fileStem('RC柱斷面設計檢核計算書')), `P1_COL_RC柱斷面設計檢核計算書_${h.slice(0,8)}`, 'PDF 預設檔名同一規則');
   assert.equal(await page.evaluate(() => fileStem('X', 'a/b c')), `abc_X_${h.slice(0,8)}`, '檔名去除不合法字元');
   const [d2] = await Promise.all([page.waitForEvent('download', {timeout: 60000}), page.evaluate(() => memCsv())]);
-  const rows = fs.readFileSync(await d2.path(), 'utf8').replace(/^\ufeff/, '').split('\r\n').map(l => l.split(','));
-  assert.deepEqual(rows[0].slice(-2), ['輸入SHA-256', '內力來源']);
+  // 簡易 CSV 解析（儲存格可含逗號與引號）
+  const parse = l => { const out = []; let cur = '', q = false;
+    for(let i = 0; i < l.length; i++){ const c = l[i];
+      if(q){ if(c === '"' && l[i+1] === '"'){ cur += '"'; i++; } else if(c === '"') q = false; else cur += c; }
+      else if(c === '"') q = true; else if(c === ','){ out.push(cur); cur = ''; } else cur += c; }
+    out.push(cur); return out; };
+  const rows = fs.readFileSync(await d2.path(), 'utf8').replace(/^\ufeff/, '').split('\r\n').map(parse);
+  assert.deepEqual(rows[0].slice(-3), ['下一步', '輸入SHA-256', '內力來源']);
+  const col = k => rows[0].indexOf(k);
   const beam = rows.slice(1).find(r => r[1] === '梁／版');
   assert.ok(beam, '構件清單有匯入的梁');
-  assert.match(beam[7], /^[0-9a-f]{16}$/);
-  assert.match(beam[8], /^midas_pier\.mct／midas_beam_force\.txt|^midas_pier\.mct／貼上／群組 /);
+  assert.ok(beam[col('下一步')], '下一步欄有內容');
+  assert.match(beam[col('輸入SHA-256')], /^[0-9a-f]{16}$/);
+  assert.match(beam[col('內力來源')], /^midas_pier\.mct／midas_beam_force\.txt|^midas_pier\.mct／貼上／群組 /);
   assert.match(await page.evaluate(() => window.__dlNames.at(-1)), /^構件總表_\d{4}-\d\d-\d\d\.csv$/);
 });
 

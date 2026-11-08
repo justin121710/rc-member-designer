@@ -80,7 +80,7 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
 
   <h2 style="margin-top:10mm">0. 標準作業流程總覽</h2>
   <div class="flow">
-    <span>① 設計對象與斷面</span><i>→</i><span>② 載重組合</span><i>→</i><span>③ 建議配筋（選定後進主畫面）</span><i>→</i><span>④ 長細效應與細部輸入</span><i>→</i>
+    <span>⓪ 選擇要做的事</span><i>→</i><span>① 設計對象與斷面</span><i>→</i><span>② 載重組合</span><i>→</i><span>③ 建議配筋（選定後進主畫面）</span><i>→</i><span>④ 長細效應與細部輸入</span><i>→</i>
     <span>⑤ 看判定、改到通過</span><i>→</i><span>⑥ 檢查圖面與配置</span><i>→</i><span>⑦ 計算書 PDF／Excel</span><i>→</i><span>⑧ 儲存案件 .json</span>
   </div>
   <p>工具是單一網頁，所有計算都在瀏覽器內即時完成：<b>每改一個輸入，圖面、判定與警示就立刻重算</b>，不需要按「計算」。頂列的「重算 #N」編號每重算一次加一，可用來確認畫面是否已更新。</p>
@@ -89,7 +89,16 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
 
 <section class="chap">
   <h2>1. 開啟工具與設定設計對象</h2>
-  <p>開啟網頁後會出現三個步驟的開場視窗（底色不透明，不受背景畫面干擾）：<b>① 設計對象與斷面 → ② 載重組合 → ③ 建議配筋</b>。只要有載重組合，就可以直接求出合格且省料的配筋，選定後才進入主畫面；也可以在任一步按「直接進入主畫面」自行輸入配筋；勾選「下次開啟不再顯示」即直接進入主畫面（左上「變更」或狀態列之設計依據、斷面型式切換仍可使用）。</p>
+  <p>開啟網頁後先問「<b>你現在要完成哪一件事？</b>」（圖 0），依手上的資料選一條路徑：</p>
+  <figure><img src="img/00-task.png" style="max-height:95mm"><figcaption>圖 0　任務入口</figcaption></figure>
+  <ol>
+    <li><span class="n">1</span><b>從 Midas 結果開始設計</b>：已有模型與內力時選這個，直接開「從 Midas 匯入」（第 5 節），斷面尺寸由模型帶入，不必先填。</li>
+    <li><span class="n">2</span><b>手動驗算一個構件</b>：進入下面的三步開場視窗。</li>
+    <li><span class="n">3</span><b>繼續已有案件</b>：開啟案件檔（.json）；含審查修改時會列出改了哪些欄位並重算。有自動保存的上次工作時，視窗最上方會列出構件名稱與時間，按「繼續」即可。</li>
+    <li><span class="n">4</span><b>審查已完成的設計</b>：另開 StructAudit-AI，交付計算書 PDF 與同一組雜湊的案件檔。</li>
+    <li><span class="n">5</span>第一次用可按「用 P1 墩柱範例走一次」，載入書稿第 66 章的範例模型與內力表（不影響自己的案件）。<span class="n">6</span>熟手可勾「下次開啟直接進入主畫面」。</li>
+  </ol>
+  <p>選「手動驗算」會出現三個步驟的開場視窗（底色不透明，不受背景畫面干擾）：<b>① 設計對象與斷面 → ② 載重組合 → ③ 建議配筋</b>。只要有載重組合，就可以直接求出合格且省料的配筋，選定後才進入主畫面；也可以在任一步按「直接進入主畫面」自行輸入配筋；勾選「下次開啟不再顯示」（與任務入口的「下次開啟直接進入主畫面」為同一設定）即直接進入主畫面（左上「變更」或狀態列之設計依據、斷面型式切換仍可使用）。</p>
   <figure><img src="img/01-setup.png"><figcaption>圖 1　開場視窗第 ① 步：設計對象與斷面</figcaption></figure>
   <ol>
     <li><span class="n">1</span><b>構件類型</b>：選「柱斷面」或「梁／版斷面」。</li>
@@ -121,7 +130,16 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
     <tr><td><span class="n">5</span></td><td>說明卡</td><td>游標停在哪一列，就顯示該參數「影響什麼」、「規範限制」與警示。</td></tr>
     <tr><td><span class="n">6</span></td><td>結果分頁</td><td>斷面與 P-M／結果摘要／軸向配置／伸展長度與搭接／警示（帶件數）／自測。</td></tr>
     <tr><td><span class="n">7</span></td><td>設計對象按鈕</td><td>顯示目前的構件・斷面｜依據｜名稱；點擊重新開啟圖 1 的視窗。</td></tr>
+    <tr><td><span class="n">8</span></td><td>工作檢視</td><td>這次要做的四步、先處理哪一項、最近一次修改的前後差異（見下）。</td></tr>
   </table>
+  <h3>工作檢視：結果帶著你走</h3>
+  <figure><img src="img/02b-workbar.png"><figcaption>圖 2a　工作檢視：<span class="n">1</span> 這次要做、<span class="n">2</span> 先處理這一項、<span class="n">3</span> 上次 → 本次、<span class="n">4</span> 修改紀錄</figcaption></figure>
+  <ol>
+    <li><span class="n">1</span><b>這次要做</b>：資料來源（手動或 Midas 檔名）→ 斷面與載重（能不能重算）→ 配筋與檢核（不合格幾項）→ 計算書（需確認幾項）。目前卡住的那一步以底色標出，點它會跳到要處理的地方。</li>
+    <li><span class="n">2</span><b>先處理這一項</b>：第一個不合格（或無法重算、待確認）的項目，附上相關欄位，可以<b>直接在這裡改</b>，會寫回參數表並重算；有多項時按「下一項」。全部通過且需確認都勾選後，改為提示預覽報告。</li>
+    <li><span class="n">3</span><b>上次 → 本次</b>：最近一次修改了哪個欄位、判定怎麼變（綠色為改善、紅色為變差）。</li>
+    <li><span class="n">4</span><b>修改紀錄</b>：本次開啟期間每次修改與判定變化。規範係數或判定選項（\(\phi\)、長細效應處理方式等）與程式預設不同時，另顯示「有自訂設定 N 項」，點開可看預設值並跳到該欄位。熟手可按「收合」只留進度列。</li>
+  </ol>
   <div class="tip"><b>狀態記號</b>✓ 通過；<i>i</i> 需你確認（假設或配對選擇，<b>不是錯誤</b>）；! 注意（例如餘裕不足 10%）；✗ 不符。參數表的狀態欄留白代表該列沒有對應檢核，不是漏算。</div>
 </section>
 
@@ -209,15 +227,16 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
 <section class="chap">
   <h3>從 Midas 匯入</h3>
   <p>載重表的「<b>從 Midas 匯入</b>」直接讀 Midas Civil 的結果表格，依結構群組把元素歸到構件、換算成 tf、tf·m，並挑出控制組合（整體流程見 <code>docs/INTEGRATION.md</code>）。圖 8a、8b 為橋墩 P1 的例子（模型與內力表即 <code>tests/fixtures</code> 的範例檔）。</p>
-  <figure><img src="img/08b-midas.png" style="max-height:120mm"><figcaption>圖 8a　從 Midas 匯入：<span class="n">1</span> 模型 .mct、<span class="n">2</span> 貼上內力表、<span class="n">3</span> 讀取內力表、<span class="n">4</span> 勾選結構群組</figcaption></figure>
-  <figure><img src="img/08c-midas-prev.png" style="max-height:120mm"><figcaption>圖 8b　預覽：<span class="n">1</span> 載重勾選（單一工況、包絡預設不勾）、<span class="n">2</span> 控制組合與來源、<span class="n">3</span> 建立到構件清單、<span class="n">4</span> 套用到目前構件</figcaption></figure>
+  <figure><img src="img/08b-midas.png" style="max-height:120mm"><figcaption>圖 8a　① 提供資料：<span class="n">1</span> 目前步驟、<span class="n">2</span> 模型 .mct、<span class="n">3</span> P1 範例、<span class="n">4</span> 貼上內力表、<span class="n">5</span> 讀取內力表</figcaption></figure>
+  <figure><img src="img/08c-midas-prev.png" style="max-height:120mm"><figcaption>圖 8b　② 確認對應、③ 建立構件：<span class="n">1</span> 已讀資料摘要、<span class="n">2</span> 勾選結構群組、<span class="n">3</span> 載重勾選、<span class="n">4</span> 預覽、<span class="n">5</span> 按下去會改什麼、<span class="n">6</span> 套用到目前構件</figcaption></figure>
+  <p>視窗標題列的 <b>① 提供資料 → ② 確認對應 → ③ 建立構件</b> 標出目前在哪一步。</p>
   <ol>
-    <li><span class="n">1</span><b>模型 .mct</b>（建議）：midas-curve-gen 產生的 .mct，或 Midas 匯出的完整模型。工具用它的結構群組歸屬元素、用節點高程判定構件頂底，並讀斷面尺寸與單位。</li>
-    <li><span class="n">2</span><b>內力表</b>：在 Midas 的 Results &gt; Result Tables &gt; Beam &gt; Force 表格上全選複製（含標題列）貼上，或選 .txt／.csv／.xlsx 檔，按「讀取內力表」。單位取標題列括號；沒有時用 .mct 的 <code>*UNIT</code> 或手選。</li>
-    <li><span class="n">3</span><b>構件與選項</b>：勾選結構群組（一個群組＝一個構件）。單一載重工況與包絡組合預設不勾選（包絡各分量不是同時發生）。柱可指定靜載重工況，取構件底端軸力填入 \(P_D\)（橋梁容量設計用）。</li>
-    <li><span class="n">4</span><b>預覽</b>後按「套用到目前構件」（只勾一個群組時），或「建立到構件清單」（每個群組建立一個構件）。</li>
+    <li><b>模型 .mct</b>（建議）：midas-curve-gen 產生的 .mct，或 Midas 匯出的完整模型。工具用它的結構群組歸屬元素、用節點高程判定構件頂底，並讀斷面尺寸與單位。第一次用可按「用 P1 墩柱範例」載入範例模型與內力表。</li>
+    <li><b>內力表</b>：在 Midas 的 Results &gt; Result Tables &gt; Beam &gt; Force 表格上全選複製（含標題列）貼上，或選 .txt／.csv／.xlsx 檔，按「讀取內力表」。單位取標題列括號；沒有時用 .mct 的 <code>*UNIT</code> 或手選。模型與內力表都讀好後，這兩段收成一行摘要（檔名、單位、節點元素群組數、列數），按「修改」可再展開。</li>
+    <li><b>構件與選項</b>：勾選結構群組（一個群組＝一個構件）。單一載重工況與包絡組合預設不勾選（包絡各分量不是同時發生）。柱可指定靜載重工況，取構件底端軸力填入 \(P_D\)（橋梁容量設計用）。</li>
+    <li><b>預覽</b>後按「套用到目前構件」（只勾一個群組時），或「建立到構件清單」（每個群組建立一個構件）。視窗底部寫明按下去會改什麼：套用會覆寫目前構件的載重表（幾列）與斷面尺寸、名稱改成群組名；建立會在構件清單新增或更新哪幾個構件。</li>
   </ol>
-  <p>對應：柱 \(P_u = -\)Axial（壓為正）、\(M_{ux}\) ← Moment-y、\(M_{uy}\) ← Moment-z、\(V_{uy}\) ← Shear-z、\(V_{ux}\) ← Shear-y；斷面 B、H 方向與 Midas 局部 y、z 相反時勾「x／y 對調」。匯入方式有兩種：<b>極值篩選（快速）</b>只列 \(P_u\)、\(M_{ux}\)、\(M_{uy}\)、合彎矩、剪力、扭矩各分量最大／最小所在的組合；<b>全部組合</b>列出每個勾選的組合。兩者都由工具逐列驗算找出控制列，但「分量極值」不等於「利用率最大」——極值篩選未列入的組合仍可能控制，正式設計建議用全部組合。柱的每一列是同一組合、同一端點的<b>同時內力</b>，每個組合列構件頂、底兩列（供長細效應 \(M_1/M_2\) 配對），篩選點在構件中間時另列一列。梁的每一列是該組合在群組內各分量的最大值（<b>群組設計包絡</b>），\(M_u^{+}\)、\(M_u^{-}\)、\(V_u\)、\(T_u\) 可能來自不同位置，不是同時內力；Midas 正 \(M_y\) 預設為下緣受拉。預覽會列出第一列的「原始列 → 設計列」對照，視窗底部固定顯示讀到幾列、用了哪個模型、排除了哪些工況與包絡、將建立幾列；再次開啟時沿用目前構件上次的匯入設定。</p>
+  <p>對應：柱 \(P_u = -\)Axial（壓為正）、\(M_{ux}\) ← Moment-y、\(M_{uy}\) ← Moment-z、\(V_{uy}\) ← Shear-z、\(V_{ux}\) ← Shear-y；斷面 B、H 方向與 Midas 局部 y、z 相反時勾「交換斷面方向 B↔H（x／y 對調）」。匯入方式有兩種：<b>極值篩選（快速）</b>只列 \(P_u\)、\(M_{ux}\)、\(M_{uy}\)、合彎矩、剪力、扭矩各分量最大／最小所在的組合；<b>全部組合</b>列出每個勾選的組合。兩者都由工具逐列驗算找出控制列，但「分量極值」不等於「利用率最大」——極值篩選未列入的組合仍可能控制，正式設計建議用全部組合。柱的每一列是同一組合、同一端點的<b>同時內力</b>，每個組合列構件頂、底兩列（供長細效應 \(M_1/M_2\) 配對），篩選點在構件中間時另列一列。梁的每一列是該組合在群組內各分量的最大值（<b>群組設計包絡</b>），\(M_u^{+}\)、\(M_u^{-}\)、\(V_u\)、\(T_u\) 可能來自不同位置，不是同時內力；Midas 正 \(M_y\) 預設為下緣受拉。預覽會列出第一列的「原始列 → 設計列」對照，視窗底部固定顯示讀到幾列、用了哪個模型、排除了哪些工況與包絡、將建立幾列；再次開啟時沿用目前構件上次的匯入設定。</p>
   <p><b>版</b>：在梁／版模組貼 Midas 的 Plate &gt; Force 表格（Elem、Load、Node、Fxx…Mxx、Myy、Mxy、Vxx、Vyy，單位寬內力）。選配筋方向（x 或 y），工具在每個節點以 Wood-Armer 換算：下層 \(M_x^{*}=M_{xx}+|M_{xy}|\)、上層 \(M_x^{*}=M_{xx}-|M_{xy}|\)，另一向變號時改用修正式 \(M_x^{*}=M_{xx}\pm|M_{xy}^2/M_{yy}|\)；每個組合取群組內最大值成為每公尺版帶的 \(M_u^{+}\)、\(M_u^{-}\)，剪力取 \(|V_{xx}|\)（或 \(|V_{yy}|\)）。斷面型式改為單位寬版，版厚取自 .mct。版元素的局部座標方向須一致，否則請在 Midas 以同一 UCS 輸出；有膜力（\(F_{xx}\)）時會警示，版模組不計軸力。</p>
   <p>匯入的來源（檔名、群組、元素、各列對應的元素端點與篩選依據、匯入時的斷面與材料）會存進案件檔，並在計算書載重表後列出「內力來源」；匯入後若手動修改載重表，計算書會註明以表內數值為準；斷面或材料改得與匯入時不同，計算書會提示內力仍是舊分析的結果、可能需回 Midas 重分析。開啟 StructAudit-AI 寫回的案件檔時，工具會列出審查修改了哪些欄位並以新輸入重算，計算書另列「審查修正紀錄」——審查建議不等於設計已通過，以計算書的判定為準。</p>
   <div class="warn"><b>尚待實機核對</b>Midas 表格標題、Part 欄寫法、梁彎矩正負號與 .mct 斷面資料順序依公開資料實作，第一次使用請以一根構件的數值與 Midas 結果對照確認。Midas 內力為節點（中心線）值，柱面、支承面折減須自行處理。</div>

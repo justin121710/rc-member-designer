@@ -121,6 +121,7 @@ test('U6、U7：函式庫自 vendor/ 載入；「不再顯示」記住；狀態�
   page.off('request', onReq);
   assert.deepEqual(cdn, [], '不得向 CDN 請求函式庫');
   assert.equal(await page.evaluate(() => document.getElementById('setupOv').classList.contains('open')), false, '設定不再顯示後不跳出精靈');
+  assert.equal(await page.evaluate(() => document.getElementById('taskOv').classList.contains('open')), false, '設定不再顯示後不跳出任務入口');
   const r = await page.evaluate(() => { document.getElementById('tabPylon').click(); applyPreset('bldg60');
     const sb = document.getElementById('sbCode'); sb.value = 'bridge'; sb.dispatchEvent(new Event('change'));
     const out = [document.getElementById('codeBasis').value, MODEL.opt.code]; sb.value = 'bldg'; sb.dispatchEvent(new Event('change')); return out; });

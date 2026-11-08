@@ -57,7 +57,7 @@ test('S1：惡意案件檔不執行、載重值清理為數字，自動保存重
     localStorage.setItem(MEM_KEY, JSON.stringify([{id: XSS, name: XSS, tab: 'pylon', saved: XSS, snap: raw}]));
   }, [c, XSS]);
   await page.reload(); await waitApp();
-  await page.evaluate(() => { document.getElementById('setupSkip') && document.getElementById('setupSkip').click(); document.getElementById('tabBeam').click(); drawBLoads(); memRender(); });
+  await page.evaluate(() => { document.getElementById('taskSkip') && document.getElementById('taskSkip').click(); document.getElementById('setupSkip') && document.getElementById('setupSkip').click(); document.getElementById('tabBeam').click(); drawBLoads(); memRender(); });
   await page.waitForTimeout(500);
   assert.equal(await pwned(), 0, '自動保存還原不得執行');
   const r = await page.evaluate(() => ({pu: LOADS[0].Pu, mpos: BLOADS[0].Mpos, mem: MEMBERS[0].snap.loads[0].Pu}));

@@ -74,6 +74,9 @@ async function screenshots(browser, base){
   let TABSEL = () => '#wsP';
   const group = name => page.evaluate(n => [...document.querySelectorAll('#railP .pin-g')].find(d => d.textContent.includes(n)).click(), name);
 
+  /* 0 任務入口 → 手動驗算進三步精靈 */
+  await shot('00-task', [['#taskOv [data-t="midas"]',1],['#taskOv [data-t="manual"]',2],['#taskOv [data-t="open"]',3],['#taskOv [data-t="review"]',4],['#taskOv [data-t="sample"]',5],['#taskNoShow',6,4]]);
+  await page.click('#taskOv [data-t="manual"]'); await W8(400);
   /* 1 設計對象 */
   await page.fill('#memName', 'C1'); await page.dispatchEvent('#memName', 'input');
   await shot('01-setup', [['#tabPylon',1],['#setupSecP',2],['#setupPreP',3],['#setupMemP',4],['#setupCode',5],['#setupEnv',6],['#setupDims',7],['#setupSkip',8],['#setupGo',9]]);
@@ -84,7 +87,11 @@ async function screenshots(browser, base){
   await shot('01c-setup-opt', [['#setupOptHost .opt-best',1],['#setupOptHost .opt-apply',2],['#setupSkip',3]]);
   await page.click('#setupSkip'); await W8(500);
   /* 2 畫面配置 */
-  await shot('02-layout', [['#topbar .tb-actions',1],['#verdict',2],['#railP',3,2],['#sheetP',4,2],['#detailP',5,2],['#wsP .ws-tabs',6],['#btnSetup',7]]);
+  await shot('02-layout', [['#topbar .tb-actions',1],['#verdict',2],['#railP',3,2],['#sheetP',4,2],['#detailP',5,2],['#wsP .ws-tabs',6],['#btnSetup',7],['#workBar',8]]);
+  /* 2b 工作檢視：改一個欄位，看「先處理」與「上次 → 本次」 */
+  await page.focus('#nB'); await page.fill('#nB', '2'); await page.dispatchEvent('#nB', 'input'); await page.keyboard.press('Tab'); await W8(400);
+  { const w = await box('#workBar'); await shot('02b-workbar', [['#workBar .wb-steps',1],['#workBar .wb-card',2],['#workBar .wb-diff',3],['#workBar [data-wb="log"]',4]], {x:0, y:Math.max(0, w.y-6), width:W, height:w.height+12}); }
+  await page.focus('#nB'); await page.fill('#nB', '4'); await page.dispatchEvent('#nB', 'input'); await page.keyboard.press('Tab'); await W8(300);
   /* 3 參數表 */
   await group('主筋'); await W8(300); await page.hover('.pin-row[data-pid="nB"]'); await W8(300);
   { const a = await box('#railP'), d = await box('#detailP');
@@ -109,14 +116,14 @@ async function screenshots(browser, base){
   { const FIX = path.join(ROOT, 'tests', 'fixtures');
     await page.setInputFiles('#midMctFile', path.join(FIX, 'midas_pier.mct'));
     await page.waitForFunction(() => /結構群組/.test(document.getElementById('midMctInfo').textContent));
-    await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'midas_beam_force.txt'), 'utf8'));
-    await page.click('#midTblRead'); await W8(300);
-    await page.check('#midGrpWrap input[data-g="0"]'); await W8(400); }
+    await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'midas_beam_force.txt'), 'utf8')); }
   const midClip = async () => { const d = await box('#midOv .imp-dlg'); const y = Math.max(0, d.y-4); return {x:d.x-4, y, width:d.width+8, height:Math.min(H-y, d.height+8)}; };
   await page.evaluate(() => { document.getElementById('midTblBox').scrollTop = 0; document.querySelector('#midOv .imp-body').scrollTop = 0; });
-  await shot('08b-midas', [['#midMctFile',1],['#midTblBox',2],['#midTblRead',3],['#midGrpWrap',4]], await midClip());
-  await page.evaluate(() => { const b = document.querySelector('#midOv .imp-body'); b.scrollTop = b.scrollHeight; }); await W8(200);
-  await shot('08c-midas-prev', [['#midLoads',1],['#midPrev table',2],['#midBatch',3],['#midApply',4]], await midClip());
+  await shot('08b-midas', [['#midSteps',1],['#midMctFile',2],['#midSample',3],['#midTblBox',4],['#midTblRead',5]], await midClip());
+  await page.click('#midTblRead'); await W8(300);
+  await page.check('#midGrpWrap input[data-g="0"]'); await W8(400);
+  await page.evaluate(() => { document.querySelector('#midOv .imp-body').scrollTop = 0; });
+  await shot('08c-midas-prev', [['#midSrcSum',1],['#midGrpWrap',2],['#midLoads',3],['#midPrev table',4],['#midSum .mid-conseq',5],['#midApply',6]], await midClip());
   await page.click('#midClose'); await W8(300);
   await page.click('#loadClose'); await W8(300);
   /* 6 判定列、警示 */

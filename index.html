@@ -8,7 +8,7 @@
 <!-- 主畫面圖示：iOS 不採用 SVG／data URI，須以 PNG apple-touch-icon（180×180）；Android／桌面 PWA 讀 manifest（只帶走 index.html 時缺檔不影響運作） -->
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#0F5F6B">
+<meta name="theme-color" content="#1E7F86">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="RC 構件設計">
@@ -37,19 +37,20 @@
 /* 案 C「檢核導向」：冷灰底 + 白卡 + 深青強調色。
    語意色（ok/warn/bad）與強調色刻意分開，狀態才不會跟裝飾混在一起。 */
 :root{
-  --bg:#EBEEF2; --panel:#FFFFFF; --line:#D8DEE5; --line2:#C3CCD6; --txt:#151C24; --dim:#56636F; --faint:#7D8994;
-  --acc:#0F5F6B; --acc-h:#0B4D57; --acc-soft:#E2EDEF;
+  --bg:#F3F4F6; --panel:#FFFFFF; --line:#DCE0E5; --line2:#C6CDD5; --txt:#151C24; --dim:#4B5563; --faint:#6B7280;
+  --brand:#1F3A5F; --brand-soft:#E8EDF3;   /* 書稿 navy：標題、區塊名稱 */
+  --acc:#1E7F86; --acc-h:#17666C; --acc-soft:#E3F1F2;   /* 書稿 teal：可操作的元素 */
   --ok:#1E7A44; --warn:#9A5E10; --bad:#B03A2E;
   --ok-soft:#E5F2EA; --warn-soft:#FBF0DF; --bad-soft:#F8E6E3;
-  --sel:#E6EEF0; --sub:#F5F7F9; --shadow:0 1px 2px rgba(21,28,36,.07);
+  --sel:#E6F1F2; --sub:#F7F8FA; --shadow:0 1px 2px rgba(21,28,36,.07);
   --chrome:#F8FAFB;   /* 頂列與狀態列：比內容區白一階、比卡片灰一階 */
-  --conc:#DCE2E8; --void:#FFFFFF; --bar:#151C24; --tie:#0F5F6B; --ct:#B0407A;
-  --curveN:#8A97A5; --curveD:#0F5F6B; --curveM:#6B4FA8; --pt:#6B7887; --ptc:#B03A2E;
+  --conc:#DCE2E8; --void:#FFFFFF; --bar:#151C24; --tie:#1E7F86; --ct:#B0407A;
+  --curveN:#8A97A5; --curveD:#1E7F86; --curveM:#6B4FA8; --pt:#6B7887; --ptc:#B03A2E;
 }
 html,body{background:var(--bg);color:var(--txt);margin:0;
   font-family:"Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;font-size:14px;
   -webkit-font-smoothing:antialiased;caret-color:var(--acc)}
-::selection{background:rgba(15,95,107,.20)}
+::selection{background:rgba(30,127,134,.20)}
 *{scrollbar-width:thin;scrollbar-color:#B9C3CD transparent}
 .fallback-grid{display:grid;grid-template-columns:150px minmax(430px,480px) minmax(0,1fr);gap:14px;padding:14px 16px}
 @media(max-width:1150px){.fallback-grid{grid-template-columns:1fr}.pin-detail{max-height:none}}
@@ -113,7 +114,7 @@ body h2{font-size:14.5px;font-weight:700;margin:0 0 10px}   /* body 前綴：pre
 svg{display:block;width:100%;height:auto}
 /* 標誌要固定尺寸：上一行的全域規則會蓋掉 width/height 屬性，
    只用屬性會讓標誌撐成滿版蓋住整個畫面。 */
-svg.logo{width:26px;height:26px;flex-shrink:0;display:inline-block;color:var(--acc)}
+svg.logo{width:26px;height:26px;flex-shrink:0;display:inline-block;color:var(--brand)}
 svg.rp-logo{width:24px;height:24px;vertical-align:-4px;margin-right:9px;color:#111}
 .mono{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-variant-numeric:tabular-nums}
 #report{display:none}
@@ -129,7 +130,34 @@ body{overflow:hidden;display:flex;flex-direction:column}
 body.rp-open{overflow:auto;display:block;background:var(--bg);color:#111}
 body.rp-open #topbar{background:#fff;color:#111;border-bottom:1px solid #999}
 body.rp-open #impBanner{display:none!important}
-body.rp-open #statusbar{display:none!important}
+body.rp-open #statusbar,body.rp-open #workBar{display:none!important}
+/* 工作檢視（降低學習成本報告）：進度、先處理一項、上次 → 本次、修改紀錄、自訂設定 */
+#workBar{flex-shrink:0;display:flex;flex-direction:column;gap:5px;padding:6px 16px 7px;background:var(--panel);border-bottom:1px solid var(--line);font-size:12.5px;min-width:0}
+#workBar:empty{display:none}
+.wb-row{display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;min-width:0}
+.wb-lbl{font-weight:700;color:var(--brand);white-space:nowrap}
+.wb-steps{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-width:0}
+.wb-step{display:inline-flex;gap:5px;align-items:center;padding:1px 9px;border-radius:999px;border:1px solid var(--line);color:var(--dim);white-space:nowrap;max-width:380px;overflow:hidden;text-overflow:ellipsis}
+.wb-step i{font-style:normal;font-weight:800}
+.wb-step.ok i{color:var(--ok)} .wb-step.bad i{color:var(--bad)} .wb-step.warn i{color:var(--warn)} .wb-step.todo i{color:var(--faint)}
+.wb-step.cur{border-color:var(--acc);background:var(--acc-soft);color:var(--brand);font-weight:600}
+.wb-sep{color:var(--line2)}
+.wb-tools{margin-left:auto;display:flex;gap:6px;align-items:center}
+body .wb-btn{padding:2px 9px;font-size:12px;border-radius:999px}
+body .wb-btn.on{border-color:var(--acc);color:var(--acc-h);background:var(--acc-soft)}
+.wb-card{display:flex;align-items:center;gap:6px 10px;flex-wrap:wrap;flex:1 1 560px;min-width:0;border-left:3px solid var(--bad);padding:2px 0 2px 10px}
+.wb-card.warn{border-left-color:var(--warn)} .wb-card.ok{border-left-color:var(--ok)}
+.wb-t{flex:1 1 320px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--txt)}
+.wb-t b{color:var(--brand)}
+.wb-ed{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--dim)}
+body .wb-ed input{width:72px;padding:2px 6px;font-size:12.5px} body .wb-ed select{width:auto;max-width:180px;padding:2px 4px;font-size:12.5px}
+.wb-diff{flex:1 1 360px;min-width:0;color:var(--dim)} .wb-diff b{color:var(--brand)}
+.wb-diff .up{color:var(--ok);font-weight:700} .wb-diff .dn{color:var(--bad);font-weight:700}
+#wbPop{position:fixed;z-index:58;background:var(--panel);border:1px solid var(--line2);border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,.18);
+  padding:10px 12px;width:min(560px,94vw);max-height:60vh;overflow:auto;font-size:12.5px}
+#wbPop table{width:100%;border-collapse:collapse} #wbPop td,#wbPop th{padding:4px 6px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+#wbPop th{color:var(--brand);border-top:0}
+@media(max-width:1150px){#workBar{padding:6px 12px}}
 /* 判定列：一眼看結論，點擊跳到對應卡片 */
 #verdict{display:flex;flex-wrap:wrap;gap:6px;min-width:0;flex:1 1 520px}
 body #verdict .vd{display:inline-flex;align-items:center;gap:7px;padding:4px 11px 4px 8px;border-radius:999px;
@@ -175,7 +203,7 @@ body.rp-open #app,body.rp-open #appBeam{display:none!important}
 .pin-mk.ok{background:transparent;color:var(--ok);border:1.5px solid rgba(30,122,68,.45)}
 .pin-mk.warn{background:var(--warn);color:#fff}
 .pin-mk.bad{background:var(--bad);color:#fff}
-.pin-mk.note{background:rgba(15,95,107,.10);color:var(--acc);border:1px solid rgba(15,95,107,.45);font-style:italic;font-family:Georgia,serif}
+.pin-mk.note{background:rgba(30,127,134,.10);color:var(--acc);border:1px solid rgba(30,127,134,.45);font-style:italic;font-family:Georgia,serif}
 
 /* 中欄：參數表與說明卡之間夾一條可拖曳的分隔線（取代原本 pin-detail 的固定高度） */
 .pin-mid{display:grid;
@@ -217,7 +245,7 @@ body.rp-open #app,body.rp-open #appBeam{display:none!important}
 .pin-chip.ok{background:rgba(30,122,68,.12);color:var(--ok)}
 .pin-chip.warn{background:rgba(180,113,26,.13);color:var(--warn)}
 .pin-chip.bad{background:rgba(176,58,46,.12);color:var(--bad)}
-.pin-chip.note{background:rgba(15,95,107,.10);color:var(--acc)}
+.pin-chip.note{background:rgba(30,127,134,.10);color:var(--acc)}
 
 .pin-detail{background:var(--panel);border:1px solid var(--line);border-radius:8px;
   padding:13px 14px;overflow-y:auto;min-height:0;box-shadow:var(--shadow)}
@@ -404,7 +432,7 @@ body .pin-v input[type=text]{text-align:left}
     --conc:#d9d9d9;--void:#fff;--bar:#000;--tie:#000;--ct:#000;
     --curveN:#888;--curveD:#000;--curveM:#555;--pt:#777;--ptc:#000;
   }
-  #app,#appBeam,#topbar,#statusbar{display:none!important}
+  #app,#appBeam,#topbar,#statusbar,#workBar{display:none!important}
   #report{display:block!important}
   .rp-page{page-break-after:always}
   .rp-page:last-child{page-break-after:auto}
@@ -473,6 +501,23 @@ body .setup-dims input{width:100%;padding:5px 7px;font-size:13.5px;border:1px so
 #setupLoadHost>.card,#setupOptHost>.card{margin:0;box-shadow:none;border:0;padding:0}
 #setupLoadHost>.card>h2,#setupOptHost>.card h2{display:none}
 #setupOv.open{display:flex}
+#taskOv{position:fixed;inset:0;background:var(--bg);z-index:71;display:none;align-items:center;justify-content:center;padding:16px}
+#taskOv.open{display:flex}
+#taskOv .task-dlg{width:min(780px,100%)}
+#taskOv .setup-body{gap:12px;padding:16px 18px}
+.task-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:640px){.task-grid{grid-template-columns:1fr}}
+body .task-c{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;padding:14px 16px;min-height:118px;
+  border:1px solid var(--line2);border-left:4px solid var(--acc);border-radius:8px;background:var(--panel)}
+body .task-c:hover{border-color:var(--acc);background:var(--acc-soft)}
+.task-c b{font-size:15px;color:var(--brand)}
+.task-c span{font-size:12.5px;color:var(--dim);line-height:1.6;font-weight:400}
+.task-c em{font-style:normal;font-size:11.5px;color:var(--acc-h);margin-top:auto;font-weight:600}
+.task-demo{font-size:12.5px;color:var(--dim);display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+body .task-link{border:0;background:none;padding:0;color:var(--acc-h);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+body .task-link:hover{background:none;color:var(--brand)}
+#taskLast:empty{display:none}
+#taskLast{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:8px;background:var(--brand-soft);font-size:12.5px;color:var(--brand)}
 .setup-dlg{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(560px,100%);max-height:92vh;
   display:flex;flex-direction:column;box-shadow:0 18px 60px rgba(0,0,0,.45)}
 .setup-head{padding:14px 18px 10px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:3px}
@@ -515,6 +560,12 @@ body .tb-setup:hover{border-color:var(--acc);background:var(--acc-soft)}
 #midOv{z-index:80}   /* 在載重組合視窗（.ov-shell 60）與開場精靈（70）之上、確認視窗（90）之下 */
 .mid-step{border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-bottom:8px}
 .mid-step > b{margin-right:6px}
+#midSrcSum{display:none;align-items:center;gap:10px;flex-wrap:wrap;background:var(--acc-soft);border-color:var(--acc)}
+#midOv.src-done #midSrcSum{display:flex}
+#midOv.src-done #midSrc{display:none}
+#midSrcSum .ok{color:var(--acc-h);font-weight:700}
+.mid-conseq{margin-top:3px;color:var(--brand)}
+.mid-steps span{font-size:11.5px;padding:2px 9px}
 .mid-info{color:var(--dim)}
 .mid-opts{display:flex;flex-wrap:wrap;gap:6px 16px}
 .mid-opts label,.mid-loads label,.mid-grps label{display:inline-flex;gap:4px;align-items:center}
@@ -563,7 +614,8 @@ input.src-miss,select.src-miss{border-color:var(--warn);border-style:dashed;
 #topbar{flex-shrink:0;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:9px 16px;
   background:var(--chrome);border-bottom:1px solid var(--line)}
 .tb-brand{display:flex;align-items:center;gap:9px}
-.tb-name{font-size:16px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+.tb-name{font-size:16px;font-weight:700;letter-spacing:.02em;white-space:nowrap;color:var(--brand)}
+body h2,.setup-head b,.imp-head b{color:var(--brand)}
 .tb-sec{font-size:13px;color:var(--dim)}
 .tb-stamp{font-size:11px;color:var(--faint)}
 .tb-actions{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
@@ -742,6 +794,27 @@ img,video{max-width:100%;height:auto}
 
 <!-- 開場視窗：先決定設計對象（構件、斷面型式、範本、依據、環境），參數表只留尺寸以後的項目。
      控制項是原本的元素搬進來（id 與事件監聽不變），compute() 照舊以 id 讀取。 -->
+<div id="taskOv" role="dialog" aria-modal="true" aria-labelledby="taskTtl">
+  <div class="setup-dlg task-dlg">
+    <div class="setup-head"><b id="taskTtl">你現在要完成哪一件事？</b><span>選一項開始；之後都能從頂列進入其他功能，熟手可勾選下方直接進入主畫面。</span></div>
+    <div class="setup-body">
+      <div id="taskLast"></div>
+      <div class="task-grid">
+        <button type="button" class="task-c" data-t="midas"><b>從 Midas 結果開始設計</b><span>已有模型與內力：讀完整 .mct 與內力表，依結構群組建立構件，來源寫進計算書。</span><em>不必先填尺寸，斷面由模型帶入</em></button>
+        <button type="button" class="task-c" data-t="manual"><b>手動驗算一個構件</b><span>柱、梁或版：選斷面與範本，輸入尺寸與載重組合，取得建議配筋。</span><em>三步：斷面 → 載重 → 建議配筋</em></button>
+        <button type="button" class="task-c" data-t="open"><b>繼續已有案件</b><span>開啟案件檔（.json）。含審查修改時，會列出改了哪些欄位並重算。</span><em>多人共用時從共用資料夾開最新的檔</em></button>
+        <button type="button" class="task-c" data-t="review"><b>審查已完成的設計</b><span>把計算書 PDF 與同一組雜湊的案件檔交給 StructAudit-AI 詰問審查。</span><em>另開審查工具</em></button>
+      </div>
+      <div class="task-demo">第一次用？<button type="button" class="task-link" data-t="sample">用 P1 墩柱範例走一次「從 Midas 匯入」</button><span>（範例檔，不影響你的案件）</span></div>
+    </div>
+    <div class="setup-act">
+      <label style="font-size:12px;color:var(--dim);display:inline-flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" id="taskNoShow" style="width:15px;height:15px;flex:0 0 15px;margin:0">下次開啟直接進入主畫面</label>
+      <div class="grow"></div>
+      <button id="taskSkip" type="button" class="btn-quiet">直接進入主畫面</button>
+    </div>
+  </div>
+</div>
+
 <div id="setupOv" role="dialog" aria-modal="true" aria-labelledby="setupTtl">
   <div class="setup-dlg">
     <div class="setup-head"><b id="setupTtl">設計對象</b><span id="setupSub">先選構件與斷面型式；之後可由左上角按鈕隨時變更。</span>
@@ -798,9 +871,12 @@ img,video{max-width:100%;height:auto}
 <div id="midOv" class="ov-shell" role="dialog" aria-modal="true" aria-labelledby="midTtl">
   <div class="imp-dlg" style="max-width:1060px">
     <div class="imp-head"><b id="midTtl">從 Midas 匯入內力</b><span class="imp-note" id="midMod"></span>
+      <div class="setup-steps mid-steps" id="midSteps" style="margin:0 0 0 8px"><span data-s="1">① 提供資料</span><span data-s="2">② 確認對應</span><span data-s="3">③ 建立構件</span></div>
       <div class="imp-grow"></div><button id="midClose" type="button">關閉</button></div>
     <div class="imp-body text-[12.5px]">
-      <div class="mid-step"><b>1. 模型 .mct（建議）</b>
+      <div class="mid-step" id="midSrcSum"></div>
+      <div id="midSrc">
+      <div class="mid-step"><b>1. 模型 .mct（建議）</b> <button type="button" id="midSample" class="task-link">用 P1 墩柱範例</button>
         <span class="imp-note">midas-curve-gen 產生的 .mct，或 Midas Civil 2022 匯出的完整模型（File &gt; Export &gt; MCT File）。用來依結構群組歸屬元素、判定頂底節點，並讀取斷面尺寸與單位。</span>
         <div class="flex gap-2 mt-1" style="align-items:center;flex-wrap:wrap"><input id="midMctFile" type="file" accept=".mct,.txt"><span id="midMctInfo" class="mid-info"></span></div>
       </div>
@@ -815,12 +891,13 @@ img,video{max-width:100%;height:auto}
         </div>
         <div id="midTblInfo" class="mid-info mt-1"></div>
       </div>
+      </div>
       <div class="mid-step" id="midStep3"><b>3. 構件與選項</b>
         <div id="midGrpWrap" class="mt-1"></div>
         <div class="mid-opts mt-2">
           <label title="只列 P、M、V、T 各分量最大／最小所在的組合；工具逐列驗算，但未列入的組合仍可能控制"><input type="radio" name="midSel" value="ctrl" checked> 極值篩選（快速）</label>
           <label title="每個勾選的組合都列出，由工具逐列驗算找出真正的控制列；正式設計建議用這個"><input type="radio" name="midSel" value="all"> 全部組合（逐組驗算，正式設計建議）</label>
-          <label class="mid-col"><input type="checkbox" id="midSwap"> x／y 對調（Midas 局部 y、z 與本工具 B、H 方向相反時）</label>
+          <label class="mid-col" title="Midas 局部 y、z 與本工具 B、H 方向相反時勾選（Beta Angle 使斷面轉 90°）"><input type="checkbox" id="midSwap"> 交換斷面方向 B↔H（x／y 對調）</label>
           <label class="mid-plate">版配筋方向：<select id="midDir"><option value="x">x 向（M<sub>xx</sub>、V<sub>xx</sub>）</option><option value="y">y 向（M<sub>yy</sub>、V<sub>yy</sub>）</option></select></label>
           <label class="mid-beam">Midas 正 M<sub>y</sub>／M<sub>xx</sub>：<select id="midSag"><option value="1">下緣受拉（M<sub>u</sub><sup>+</sup>）</option><option value="0">上緣受拉（M<sub>u</sub><sup>−</sup>）</option></select></label>
           <label class="mid-col">靜載重軸力 P<sub>D</sub> 取自：<select id="midPD"><option value="">不填</option></select></label>
@@ -902,6 +979,7 @@ img,video{max-width:100%;height:auto}
   </div>
   <div id="verdict" aria-label="檢核結論"></div>
 </div>
+<div id="workBar" aria-label="工作檢視"></div>
 <div id="errBar" style="display:none"></div>
 <div id="impBanner" style="display:none"></div>
 
@@ -1152,7 +1230,7 @@ img,video{max-width:100%;height:auto}
         <select id="loadUnit" title="計算核心維持 kgf-cm；選 SI 時表內數值以 kN、kN·m 顯示與輸入（1 tf = 9.80665 kN），CSV 亦依此單位解讀"><option value="tf">tf、tf·m（kgf 制）</option><option value="kN">kN、kN·m（SI）</option></select></div>
       <div style="overflow-x:auto">
         <table id="loadTbl" style="min-width:620px">
-          <thead><tr><th class="l">組合</th><th title="構材端部：同名組合分列頂、底兩列時，長細效應之 M₁/M₂ 由兩端彎矩求得">位置</th><th>P<sub>u</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf</span></th><th title="繞 X 軸之彎矩，由 Y 向側力造成（與 V_uy 同一受力平面）">M<sub>ux</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf·m</span><span style="font-weight:400;font-size:11px;color:var(--dim)"> ↔ V<sub>uy</sub></span></th><th title="繞 Y 軸之彎矩，由 X 向側力造成（與 V_ux 同一受力平面）">M<sub>uy</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf·m</span><span style="font-weight:400;font-size:11px;color:var(--dim)"> ↔ V<sub>ux</sub></span></th><th>V<sub>ux</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf</span></th><th>V<sub>uy</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf</span></th><th>T<sub>u</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf·m</span></th><th></th></tr></thead>
+          <thead><tr><th class="l">組合</th><th title="構材端部：同名組合分列頂、底兩列時，長細效應之 M₁/M₂ 由兩端彎矩求得">位置</th><th title="軸力 P_u：壓力為正、拉力為負（Midas Axial 的相反號）">軸力 P<sub>u</sub><br><span style="font-weight:400;font-size:11px;color:var(--dim)">壓為正，</span><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf</span></th><th title="繞 X 軸之彎矩，由 Y 向側力造成（與 V_uy 同一受力平面）">M<sub>ux</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf·m</span><span style="font-weight:400;font-size:11px;color:var(--dim)"> ↔ V<sub>uy</sub></span></th><th title="繞 Y 軸之彎矩，由 X 向側力造成（與 V_ux 同一受力平面）">M<sub>uy</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf·m</span><span style="font-weight:400;font-size:11px;color:var(--dim)"> ↔ V<sub>ux</sub></span></th><th>V<sub>ux</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf</span></th><th>V<sub>uy</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf</span></th><th>T<sub>u</sub><br><span class="u" style="font-weight:400;font-size:11px;color:var(--dim)">tf·m</span></th><th></th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -1457,7 +1535,7 @@ function applyBlocked(mod, bad){
   const dv = document.getElementById(mod==='beam' ? 'derivedB' : 'derivedP'); if(dv) dv.classList.toggle('blk-hide', on);
   let bn = ws.querySelector('.blk-banner');
   if(!bn){ bn = document.createElement('div'); bn.className = 'blk-banner'; bn.setAttribute('role','alert'); ws.querySelector('.ws-tabs').after(bn); }
-  bn.innerHTML = on ? `<b>輸入不完整，已停止計算</b>：${bad.map(b=>`${esc(b.label)}（${esc(b.why)}）`).join('、')}。<br>`
+  bn.innerHTML = on ? `<b>無法重算（輸入不完整）</b>：${bad.map(b=>`${esc(b.label)}（${esc(b.why)}）`).join('、')}。<br>`
     + '請修正參數表中標紅的欄位；在此之前不顯示任何結果，也不提供計算書、Excel 與建議配筋。' : '';
 }
 /* M14：逐字輸入時之重算。上一次重算 ≤ 120 ms 時立即重算（與舊版相同）；大型斷面或大量載重組合使重算變慢時，
@@ -2978,7 +3056,7 @@ function elevDim(o, C, a, b, at, vertical, label, side){
 function svgColElev(M, forPrint){
   const {s,r,R,lay} = M, L = M.opt.lu;
   const W=760, Hh=640, top=86, bot=58;
-  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#0F5F6B',tie2:'#6E9AA0',hot:'#E8B04B',txt:'#151C24',dim:'#5E6B7A',stub:'#B9C3CC',lapz:'#BFDCE0'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
+  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#1E7F86',tie2:'#6E9AA0',hot:'#E8B04B',txt:'#151C24',dim:'#5E6B7A',stub:'#B9C3CC',lapz:'#BFDCE0'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
   const k = (Hh-top-bot)/L;
   const wReal = s.type==='circle' ? s.D : s.B;
   let wpx = wReal*k, schematic = false;
@@ -3674,7 +3752,7 @@ function devPlanHtml(P){
    配置圖
    ========================================================================= */
 function devPal(forPrint){
-  return {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',bar2:'#0F5F6B',crit:'#B03A2E',no:'#E8B04B',txt:'#151C24',dim:'#5E6B7A',stub:'#C5CED6',bad:'#B03A2E',core:'#6B4FA8',tie:'#6E9AA0',lapz:'#BFDCE0',m:'#8A5A12'};   // 列印／匯出與螢幕同色
+  return {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',bar2:'#1E7F86',crit:'#B03A2E',no:'#E8B04B',txt:'#151C24',dim:'#5E6B7A',stub:'#C5CED6',bad:'#B03A2E',core:'#6B4FA8',tie:'#6E9AA0',lapz:'#BFDCE0',m:'#8A5A12'};   // 列印／匯出與螢幕同色
 }
 const txtW = (t, fs) => [...String(t).replace(/\\frac\{((?:[^{}]|\{[^{}]*\})*)\}\{((?:[^{}]|\{[^{}]*\})*)\}/g, (m,a,b)=> a.length>b.length?a:b).replace(/[_^{}]/g,'')].reduce((a,ch)=> a + (ch.charCodeAt(0) > 0x2e80 ? fs : fs*0.56), 0);
 function spreadLabels(items, lo, hi, gap){
@@ -4718,8 +4796,32 @@ function setupInit(){
   window.sbQuickSync = () => { for(const [m,r] of [['sbCode','codeBasis'],['sbSecP','secType'],['sbSecB','bType']]) document.getElementById(m).value = document.getElementById(r).value;
     document.querySelectorAll('#sbQuick [data-mod]').forEach(e => e.style.display = e.dataset.mod===(TAB==='beam'?'beam':'pylon') ? '' : 'none'); };
   sbQuickSync();
-  if(!noShow) openSetup();   // 開啟網站先確認設計對象（可設定不再顯示）
+  // 開場先問「要完成哪一件事」（任務入口）；手動驗算才進三步精靈。與精靈共用「不再顯示」設定
+  const tNs = document.getElementById('taskNoShow'); tNs.checked = noShow;
+  tNs.addEventListener('change', () => { nsBox.checked = tNs.checked; try{ localStorage.setItem(NS, tNs.checked ? '1' : '0'); }catch(e){} });
+  if(!noShow) openTask();
 }
+/* 任務入口：從 Midas／手動驗算／繼續案件／審查四條路徑分流；上次自動保存的構件列在最上方 */
+const AUDIT_URL = 'https://github.com/justin121710/StructAudit-AI';
+function openTask(){
+  const ov = document.getElementById('taskOv'), last = document.getElementById('taskLast');
+  let c = null; try{ c = JSON.parse(localStorage.getItem(CASE_KEY) || 'null'); }catch(e){}
+  const nm = c && c.values ? (c.tab==='beam' ? c.values.bMemName : c.values.memName) : '';
+  last.innerHTML = nm ? `<span>上次的工作：<b>${nosb(esc(nm))}</b>（${esc(String(c.saved||'').replace('T',' ').slice(0,16))}，自動保存在這台電腦）</span><button type="button" class="task-link" data-t="resume">繼續</button>` : '';
+  ov.classList.add('open');
+}
+const closeTask = () => document.getElementById('taskOv').classList.remove('open');
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('#taskOv [data-t], #taskSkip'); if(!b) return;
+  const t = b.id==='taskSkip' ? 'skip' : b.dataset.t;
+  closeTask();
+  if(t==='midas') window.midasImport.open(TAB==='beam' ? 'beam' : 'pylon');
+  else if(t==='sample'){ if(TAB==='beam') document.getElementById('tabPylon').click(); window.midasImport.open('pylon'); window.midasImport.sample(); }
+  else if(t==='manual') openSetup();
+  else if(t==='open') document.getElementById('caseFile').click();
+  else if(t==='review') window.open(AUDIT_URL, '_blank', 'noopener');
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape' && document.getElementById('taskOv').classList.contains('open')) closeTask(); });
 function pinGo(mod, id){
   { const e = document.getElementById(id); if(e && e.closest('#setupOv')){ openSetup(e); return; } }
   const st = PIN[mod]; if(!st || !st.rows) return;
@@ -4869,7 +4971,7 @@ function svgCircle(M,forPrint){
   const k = (Math.min(W, Hh-band) - 2*pad)/s.D;
   const cx = W/2, cy = band + (Hh-band)/2;
   const X = x=>cx + x*k, Y = y=>cy - y*k;
-  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#0F5F6B',dim:'#5E6B7A',ann:'#8A5A12',annBad:'#B03A2E'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
+  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#1E7F86',dim:'#5E6B7A',ann:'#8A5A12',annBad:'#B03A2E'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
   const o=[`<svg viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif,system-ui,sans-serif">`,
            `<rect width="${W}" height="${Hh}" fill="${forPrint?'#fff':'transparent'}"/>`];
   o.push(`<circle cx="${cx}" cy="${cy}" r="${s.D/2*k}" fill="${C.conc}" stroke="${C.line}" stroke-width="2"/>`);
@@ -4919,7 +5021,7 @@ function svgSection(M,forPrint){
   const cy = band + (Hh-band)/2;
   const X = x=>W/2 + x*k, Y = y=>cy - y*k;
   const o=[];
-  const C = {conc:'#DCE2E8',void:'#FFFFFF',line:'#8A97A5',bar:'#151C24',tie:'#0F5F6B',ct:'#B0407A',txt:'#151C24',bad:'#B03A2E',dim:'#5E6B7A',ann:'#8A5A12',annBad:'#B03A2E'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
+  const C = {conc:'#DCE2E8',void:'#FFFFFF',line:'#8A97A5',bar:'#151C24',tie:'#1E7F86',ct:'#B0407A',txt:'#151C24',bad:'#B03A2E',dim:'#5E6B7A',ann:'#8A5A12',annBad:'#B03A2E'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
 
   o.push(`<svg viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif,system-ui,sans-serif">`);
   o.push(`<rect width="${W}" height="${Hh}" fill="${forPrint?'#fff':'transparent'}"/>`);
@@ -5212,7 +5314,7 @@ function svgPM(M,axis,forPrint){
   const FS = forPrint ? 2.35 : 1, LW = forPrint ? 1.9 : 1.3;
   const PH = forPrint ? 640 : 430, yB = T + PH;   // 繪圖區高、x 軸（圖框底）位置
   let Hh = 0;   // 圖例排完後才知道
-  const C = {ax:'#3A4652',grid:'#E2E7EC',n:'#8A97A5',d:'#0F5F6B',mc:'#6B4FA8',pt:'#6B7887',ptc:'#B03A2E',txt:'#151C24',ok:'#1E7A44',bad:'#B03A2E'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
+  const C = {ax:'#3A4652',grid:'#E2E7EC',n:'#8A97A5',d:'#1E7F86',mc:'#6B4FA8',pt:'#6B7887',ptc:'#B03A2E',txt:'#151C24',ok:'#1E7A44',bad:'#B03A2E'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
 
   // 軸距由「標稱 + 設計 + 載重」決定；圍束曲線僅裁切至圖框內，
   // 否則其高軸壓分支（非設計相關）會把整張圖壓扁。
@@ -5600,22 +5702,28 @@ function loadSrcLine(mod){
     + (MidasIO.loadsEdited(mod==='beam' ? BLOADS : LOADS, a.key) ? '（匯入後已修改）' : '')
     + (stale.length ? '（斷面或材料已變更，須重分析）' : '');
 }
+/* 構件清單「下一步」：無法重算 → 第一個不合格項目 → 需確認 → 可列印（與工作檢視同一順序） */
+function memNext(mod){
+  const items = WB.items[mod] || [], bad = items.filter(a => a.lv==='bad'), pend = confPending(mod).length;
+  return bad.length ? `${bad.length > 1 ? `不合格 ${bad.length} 項，先處理：` : '先處理：'}${wbTxt(bad[0].t).slice(0, 60)}` : pend ? `勾選需確認 ${pend} 項` : '可預覽列印';
+}
 function memSummary(){
   const beam = TAB==='beam', mod = beam ? 'beam' : 'pylon', h = inputHash().slice(0,16), src = loadSrcLine(mod);
-  if(beam){ const B = BMODEL || renderBeam(); if(!B || (B.badIn && B.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'輸入不完整', h, src};
-    return {dc: beamDcGov(B).dc, bad: beamAlertItems(B).filter(a=>a.lv==='bad').length, pend: confPending('beam').length, h, src,
+  if(beam){ const B = BMODEL || renderBeam(); if(!B || (B.badIn && B.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'無法重算（輸入不完整）', h, src, next: memNext(mod)};
+    return {dc: beamDcGov(B).dc, bad: beamAlertItems(B).filter(a=>a.lv==='bad').length, pend: confPending('beam').length, h, src, next: memNext(mod),
             txt: `${B.S.slab ? '版' : B.S.type==='T' ? 'T 梁' : '矩形梁'} ${f(B.S.bw,0)}×${f(B.S.h,0)}`}; }
-  const M = MODEL || render(); if(!M || (M.badIn && M.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'輸入不完整', h, src};
-  return {dc: M.ctrlFlex.dc, bad: colAlertItems(M).filter(a=>a.lv==='bad').length, pend: confPending('pylon').length, h, src,
+  const M = MODEL || render(); if(!M || (M.badIn && M.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'無法重算（輸入不完整）', h, src, next: memNext(mod)};
+  return {dc: M.ctrlFlex.dc, bad: colAlertItems(M).filter(a=>a.lv==='bad').length, pend: confPending('pylon').length, h, src, next: memNext(mod),
           txt: M.s.type==='circle' ? `圓形 D${f(M.s.D,0)}` : `${M.s.type==='box'?'箱型':'矩形'} ${f(M.s.B,0)}×${f(M.s.H,0)}`};
 }
 function memRender(){
   const el = document.getElementById('memList'); if(!el) return;
   if(!MEMBERS.length){ el.innerHTML = '<div style="color:var(--dim)">尚無構件。設定好一根柱或一支梁後按「加入／更新目前構件」。</div>'; return; }
-  el.innerHTML = SB(`<table><thead><tr><th class="l">構件</th><th class="l">模組</th><th class="l">斷面</th><th>撓曲 D/C</th><th>不合格</th><th>需確認</th><th class="l">更新時間</th><th></th></tr></thead><tbody>`
+  el.innerHTML = SB(`<table><thead><tr><th class="l">構件</th><th class="l">模組</th><th class="l">斷面</th><th>撓曲 D/C</th><th>不合格</th><th>需確認</th><th class="l">下一步</th><th class="l">更新時間</th><th></th></tr></thead><tbody>`
     + MEMBERS.map((m,i)=>{ const r = MEM_RES[m.id];
       return `<tr><td class="l"><b>${nosb(esc(m.name))}</b></td><td class="l">${m.tab==='beam'?'梁／版':'柱'}</td><td class="l">${r?esc(r.txt):'—'}</td>
         <td style="color:${r&&r.dc>1?'var(--bad)':'inherit'}">${r?fdc(r.dc):'—'}</td><td>${r?r.bad:'—'}</td><td>${r?r.pend:'—'}</td>
+        <td class="l" style="max-width:300px;color:${r&&r.bad?'var(--bad)':r&&r.pend?'var(--warn)':'var(--ok)'}">${r&&r.next?esc(r.next):'—'}</td>
         <td class="l">${esc((m.saved||'').replace('T',' ').slice(0,16))}</td>
         <td style="white-space:nowrap"><button type="button" class="mem-open !py-0.5 !px-2" data-i="${i}">開啟</button> <button type="button" class="mem-del !py-0.5 !px-2" data-i="${i}">刪除</button></td></tr>`; }).join('')
     + `</tbody></table>`);
@@ -5652,8 +5760,8 @@ async function memBatch(){ await memEach(async m => { MEM_RES[m.id] = memSummary
 async function memCsv(){
   await memBatch();
   // 後兩欄供貼到團隊專案狀態表（docs/TEAM_FOLDER.md）：輸入 SHA-256 前 16 碼＝計算書表頭，案件檔名取前 8 碼
-  const rows = [['構件','模組','斷面','撓曲D/C','不合格項數','需確認未完成','判定','輸入SHA-256','內力來源']].concat(MEMBERS.map(m => { const r = MEM_RES[m.id] || {};
-    return [m.name, m.tab==='beam'?'梁／版':'柱', r.txt||'', Number.isFinite(r.dc) ? r.dc.toFixed(3) : '∞', r.bad??'', r.pend??'', r.bad ? 'FAIL' : r.pend ? '未完成' : 'PASS', r.h||'', r.src||'']; }));
+  const rows = [['構件','模組','斷面','撓曲D/C','不合格項數','需確認未完成','判定','下一步','輸入SHA-256','內力來源']].concat(MEMBERS.map(m => { const r = MEM_RES[m.id] || {};
+    return [m.name, m.tab==='beam'?'梁／版':'柱', r.txt||'', Number.isFinite(r.dc) ? r.dc.toFixed(3) : '∞', r.bad??'', r.pend??'', r.bad ? 'FAIL' : r.pend ? '未完成' : 'PASS', r.next||'', r.h||'', r.src||'']; }));
   const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
   const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})), download: `構件總表_${new Date().toISOString().slice(0,10)}.csv`});
   document.body.appendChild(a); a.click(); a.remove();
@@ -5983,6 +6091,153 @@ document.querySelectorAll('.ws').forEach(ws=>{
 });
 
 /* ---------- 判定列：每項 [狀態, 標題, 值, 補充, 跳轉目標 id] ---------- */
+/* ---------- 工作檢視（降低學習成本與簡化介面報告，2026-11-08） ----------
+   判定列下方一列：這次要做的四步（資料來源、斷面與載重、配筋與檢核、計算書）、「先處理這一項」（第一個不合格／無法重算的項目，
+   附可直接修改的欄位）、上次 → 本次（最近一次修改前後的判定差異）、修改紀錄（本次開啟期間）、自訂設定（規範係數等與預設不同者）。
+   只讀現有計算結果與警示，不另做計算。 */
+const WB = {items:{pylon:[], beam:[]}, vd:{pylon:{}, beam:{}}, pills:{pylon:[], beam:[]}, idx:{pylon:0, beam:0},
+  log:{pylon:[], beam:[]}, focus:null, open:false};
+try{ WB.open = localStorage.getItem('rcsd.wb.collapsed')!=='1'; }catch(e){ WB.open = true; }
+/* 自訂設定：規範係數群組與幾個會改變判定的選項，與程式預設（螺箍柱 φ 依型式）不同者 */
+const WB_CUSTOM = {pylon: ['phic','phit','phiv','phivB','brPhiMode','pmaxf','alpha','slTreat','vcRule'], beam: ['bphit','bphiv','bAl545']};
+function wbDefault(el){
+  if(el.id==='phic' || el.id==='pmaxf'){ const sp = document.getElementById('secType').value==='circle' && document.getElementById('spiral').value==='spiral';
+    return el.id==='phic' ? (sp ? '0.75' : '0.65') : (sp ? '0.85' : '0.8'); }
+  if(el.tagName==='SELECT'){ const o = [...el.options].find(x => x.defaultSelected) || el.options[0]; return o ? o.value : ''; }
+  return el.defaultValue;
+}
+function wbCustom(mod){
+  return WB_CUSTOM[mod].map(id => document.getElementById(id)).filter(el => el && !(el.closest('.pin-row') && el.closest('.pin-row').classList.contains('pin-na')))
+    .filter(el => { const d = wbDefault(el), v = el.value; return d != null && v !== d && !(Number.isFinite(+v) && Number.isFinite(+d) && Math.abs(+v - +d) < 1e-9); });
+}
+const wbTxt = h => String(h||'').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+function wbFieldInfo(mod, id){
+  const st = PIN[mod], rec = st && st.rows ? st.rows.find(r => r.id===id) : null, el = document.getElementById(id);
+  const val = !el ? '' : el.tagName==='SELECT' ? (el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : '') : el.value;
+  return {name: rec ? rec.name : (el && el.dataset.lbl) || pinLabel(id), unit: rec && rec.unit ? rec.unit : '', val};
+}
+/* 判定膠囊快照：名稱 → 狀態與值 */
+function wbSnap(mod, items){
+  WB.pills[mod] = items.map(([st, k, v]) => ({st, k, v}));
+  WB.vd[mod] = Object.fromEntries(items.map(([st, k, v]) => [k, {st, v}]));
+}
+function wbDiff(before, after){
+  const R = {ok: 0, na: 1, warn: 1, bad: 2}, out = [];
+  for(const [k, a] of Object.entries(after)){ const b = before && before[k]; if(!b || (b.v===a.v && b.st===a.st)) continue;
+    out.push({k, from: b.v, to: a.v, dir: R[a.st] < R[b.st] ? 'up' : R[a.st] > R[b.st] ? 'dn' : ''}); }
+  for(const k of Object.keys(before || {})) if(!(k in after)) out.push({k, from: before[k].v, to: '—', dir: before[k].st==='bad' ? 'up' : ''});
+  return out;
+}
+/* 修改紀錄：使用者直接改欄位（focus 時記下原值與當時判定），或在「先處理」列改 */
+function wbLog(mod, id, label, from, to, unit, before){
+  renderFlush();
+  setTimeout(() => {
+    const e = {at: new Date(), id, label, from, to, unit, diff: wbDiff(before, WB.vd[mod])};
+    WB.log[mod].unshift(e); WB.log[mod].length = Math.min(WB.log[mod].length, 40);
+    wbRender(mod);
+  }, 0);
+}
+const wbMod = el => el.closest('#appBeam') || el.closest('#bLoadTbl') ? 'beam' : 'pylon';
+const wbTrack = el => el && el.matches && el.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]),select') &&
+  (el.closest('#app') || el.closest('#appBeam') || el.closest('#loadTbl') || el.closest('#bLoadTbl')) && !el.closest('#workBar');
+document.addEventListener('focusin', e => { const el = e.target; if(!wbTrack(el)) return;
+  const mod = wbMod(el); WB.focus = {el, val: el.value, vd: {...WB.vd[mod]}}; });
+document.addEventListener('change', e => { const el = e.target; if(!e.isTrusted || !wbTrack(el)) return;
+  const mod = wbMod(el), F = WB.focus && WB.focus.el===el ? WB.focus : {val: '', vd: {...WB.vd[mod]}};
+  const inLoads = el.closest('#loadTbl') || el.closest('#bLoadTbl');
+  const info = inLoads ? {name: '載重組合', unit: ''} : wbFieldInfo(mod, el.id);
+  const show = x => el.tagName==='SELECT' ? ([...el.options].find(o => o.value===x) || {text: x}).text : x;
+  if(F.val !== el.value) wbLog(mod, el.id, info.name, show(F.val), show(el.value), info.unit, F.vd);
+  WB.focus = {el, val: el.value, vd: {...WB.vd[mod]}};
+});
+function wbSteps(mod){
+  const B = mod==='beam', M = B ? BMODEL : MODEL, a = LOADSRC && LOADSRC[mod], loads = B ? BLOADS : LOADS;
+  const bad = WB.pills[mod].find(p => p.k==='不合格'), blocked = WB.pills[mod].find(p => p.k==='無法重算');
+  const nPend = confPending(mod).length, nConf = CONF_ITEMS[mod].length;
+  const src = a ? {st: secvDiff(mod, a).length ? 'warn' : 'ok', t: `Midas：${a.mct || a.table || '貼上'}${MidasIO.loadsEdited(loads, a.key) ? '（已修改）' : ''}`}
+    : {st: loads.length ? 'ok' : 'todo', t: loads.length ? `手動輸入 ${loads.length} 組` : '尚未輸入載重'};
+  return [
+    {k: '資料來源', ...src, go: 'loads'},
+    {k: '斷面與載重', st: blocked ? 'bad' : !loads.length ? 'todo' : 'ok', t: blocked ? `無法重算：缺 ${blocked.v.replace(/\D/g, '')} 欄` : '可重算', go: 'first'},
+    {k: '配筋與檢核', st: blocked ? 'todo' : bad && bad.st==='bad' ? 'bad' : 'ok', t: blocked ? '等待重算' : bad && bad.st==='bad' ? `不合格 ${bad.v}` : '全部通過', go: 'first'},
+    {k: '計算書', st: blocked || (bad && bad.st==='bad') ? 'todo' : nPend ? 'warn' : 'ok', t: nPend ? `需確認 ${nPend} / ${nConf}` : blocked || (bad && bad.st==='bad') ? '尚未完成' : '可預覽列印', go: nPend ? 'warn' : 'report'},
+  ];
+}
+/* 先處理這一項：無法重算 → 不合格 → 需確認 → 完成 */
+function wbFocusItem(mod){
+  const items = WB.items[mod] || [], bads = items.filter(a => a.lv==='bad');
+  if(bads.length){ const i = WB.idx[mod] % bads.length; return {lv: 'bad', a: bads[i], i, n: bads.length}; }
+  const pend = confPending(mod);
+  if(pend.length) return {lv: 'warn', a: {t: `需確認：${pend[0].t}`, ids: pend[0].ids || []}, i: 0, n: pend.length, conf: true};
+  return {lv: 'ok', a: {t: '全部檢核通過、需確認項目已勾選：可以「預覽報告」後列印或匯出。', ids: []}, i: 0, n: 0};
+}
+function wbEditor(mod, id){
+  if(id[0]==='#') return id==='#loadTbl' || id==='#bLoadTbl' ? `<button type="button" class="wb-btn" data-wb="loads">開啟載重組合</button>` : '';
+  const el = document.getElementById(id); if(!el) return '';
+  const row = el.closest('.pin-row'); if(row && row.classList.contains('pin-na')) return '';
+  const info = wbFieldInfo(mod, id), lab = SB(esc(info.name));
+  if(el.tagName==='SELECT') return `<label class="wb-ed">${lab}<select data-wbf="${id}">${[...el.options].map(o => `<option value="${esc(o.value)}"${o.value===el.value ? ' selected' : ''}>${esc(o.text)}</option>`).join('')}</select></label>`;
+  return `<label class="wb-ed">${lab}<input data-wbf="${id}" value="${esc(el.value)}" inputmode="decimal">${info.unit ? esc(info.unit) : ''}</label>`;
+}
+function wbRender(mod){
+  const host = document.getElementById('workBar'); if(!host) return;
+  const steps = wbSteps(mod), cur = steps.findIndex(x => x.st!=='ok'), ic = {ok: '✓', bad: '✗', warn: '!', todo: '○'};
+  const cust = wbCustom(mod), last = WB.log[mod][0];
+  let h = `<div class="wb-row"><span class="wb-lbl">這次要做</span><div class="wb-steps">`
+    + steps.map((x, i) => `${i ? '<span class="wb-sep">›</span>' : ''}<button type="button" class="wb-step ${x.st}${i===cur ? ' cur' : ''}" data-wb="${x.go}" title="${esc(x.t)}"><i>${ic[x.st]}</i>${x.k}：${SB(esc(x.t))}</button>`).join('')
+    + `</div><div class="wb-tools">`
+    + (cust.length ? `<button type="button" class="wb-btn on" data-wb="custom" title="規範係數或判定選項與程式預設不同">有自訂設定 ${cust.length} 項</button>` : '')
+    + `<button type="button" class="wb-btn" data-wb="log">修改紀錄 ${WB.log[mod].length}</button>`
+    + `<button type="button" class="wb-btn" data-wb="toggle" aria-expanded="${WB.open}">${WB.open ? '收合' : '展開'}</button></div></div>`;
+  if(WB.open){
+    const F = wbFocusItem(mod), seen = new Set();
+    const eds = (F.a.ids || []).filter(x => x && !seen.has(x) && seen.add(x)).slice(0, 3).map(x => wbEditor(mod, x)).filter(Boolean).join('');
+    const tag = F.lv==='bad' ? `先處理（${F.i + 1}／${F.n}）` : F.lv==='warn' ? `待確認（${F.n} 項）` : '完成';
+    h += `<div class="wb-row"><div class="wb-card ${F.lv}"><span class="wb-lbl">${tag}</span><span class="wb-t" title="${esc(wbTxt(F.a.t))}">${SB(F.a.t)}</span>${eds}`
+      + (F.lv==='bad' && F.n > 1 ? `<button type="button" class="wb-btn" data-wb="next">下一項</button>` : '')
+      + (F.lv==='warn' ? `<button type="button" class="wb-btn" data-wb="warn">到警示分頁勾選</button>` : '')
+      + (F.lv==='ok' ? `<button type="button" class="wb-btn" data-wb="report">預覽報告</button>` : '')
+      + `</div>`;
+    if(last){ const d = last.diff.length ? last.diff.slice(0, 4).map(x => `${SB(esc(x.k))} ${SB(esc(x.from))} → <span class="${x.dir}">${SB(esc(x.to))}</span>`).join('；') : '判定沒有改變';
+      h += `<div class="wb-diff"><span class="wb-lbl">上次 → 本次</span> <b>${SB(esc(last.label))}</b> ${SB(esc(last.from))} → ${SB(esc(last.to))}${last.unit ? ' ' + esc(last.unit) : ''}：${d}</div>`; }
+    h += `</div>`;
+  }
+  host.innerHTML = h;
+  requestAnimationFrame(() => document.documentElement.style.setProperty('--sbH', (document.getElementById('statusbar').offsetHeight + host.offsetHeight) + 'px'));
+}
+function wbPop(btn, html){
+  let p = document.getElementById('wbPop'); if(p){ p.remove(); if(p.dataset.k===btn.dataset.wb) return; }
+  p = document.createElement('div'); p.id = 'wbPop'; p.dataset.k = btn.dataset.wb; p.innerHTML = html; document.body.appendChild(p);
+  const r = btn.getBoundingClientRect(); p.style.top = (r.bottom + 6) + 'px'; p.style.left = Math.max(8, Math.min(window.innerWidth - p.offsetWidth - 8, r.right - p.offsetWidth)) + 'px';
+}
+document.addEventListener('click', e => {
+  const pop = document.getElementById('wbPop');
+  if(pop && !e.target.closest('#wbPop') && !e.target.closest('[data-wb="log"],[data-wb="custom"]')) pop.remove();
+  const b = e.target.closest && e.target.closest('#workBar [data-wb], #wbPop [data-wb]'); if(!b) return;
+  const mod = TAB==='beam' ? 'beam' : 'pylon', k = b.dataset.wb, ws = document.getElementById(mod==='beam' ? 'wsB' : 'wsP');
+  if(k==='toggle'){ WB.open = !WB.open; try{ localStorage.setItem('rcsd.wb.collapsed', WB.open ? '0' : '1'); }catch(x){} wbRender(mod); }
+  else if(k==='next'){ WB.idx[mod]++; wbRender(mod); }
+  else if(k==='loads') document.getElementById(mod==='beam' ? 'bLoadBtn' : 'btnLoads') ? document.getElementById(mod==='beam' ? 'bLoadBtn' : 'btnLoads').click() : wsShow(ws, 'load');
+  else if(k==='warn') wsShow(ws, 'warn');
+  else if(k==='report') document.getElementById('btnPreview') && document.getElementById('btnPreview').click();
+  else if(k==='first'){ const F = wbFocusItem(mod); const id = (F.a.ids || []).find(x => x && x[0]!=='#'); if(id) pinGo(mod, id); else wsShow(ws, 'warn'); }
+  else if(k==='go' && b.dataset.id){ pop && pop.remove(); pinGo(mod, b.dataset.id); }
+  else if(k==='clear'){ WB.log[mod] = []; pop && pop.remove(); wbRender(mod); }
+  else if(k==='log') wbPop(b, `<b style="color:var(--brand)">修改紀錄</b>（本次開啟期間，${mod==='beam' ? '梁／版' : '柱'}模組；最新在上）`
+      + (WB.log[mod].length ? `<table><thead><tr><th>時間</th><th>欄位</th><th>修改</th><th>判定變化</th></tr></thead><tbody>${WB.log[mod].map(x => `<tr><td>${x.at.toTimeString().slice(0, 5)}</td><td>${SB(esc(x.label))}</td><td>${SB(esc(x.from))} → ${SB(esc(x.to))}${x.unit ? ' ' + esc(x.unit) : ''}</td><td>${x.diff.length ? x.diff.map(d => `${SB(esc(d.k))} ${SB(esc(d.from))} → <span class="${d.dir}" style="color:${d.dir==='up' ? 'var(--ok)' : d.dir==='dn' ? 'var(--bad)' : 'inherit'}">${SB(esc(d.to))}</span>`).join('<br>') : '沒有改變'}</td></tr>`).join('')}</tbody></table>`
+        + `<div style="margin-top:6px"><button type="button" class="wb-btn" data-wb="clear">清除紀錄</button></div>` : '<div style="margin-top:6px;color:var(--dim)">還沒有修改。改了參數表或載重表的欄位後，這裡會列出改了什麼、判定怎麼變。</div>'));
+  else if(k==='custom') wbPop(b, `<b style="color:var(--brand)">有自訂設定</b>：下列設定與程式預設不同，會改變判定，計算書照實列出。`
+      + `<table><tbody>${wbCustom(mod).map(el => { const i = wbFieldInfo(mod, el.id), d = wbDefault(el), dt = el.tagName==='SELECT' ? ([...el.options].find(o => o.value===d) || {text: d}).text : d;
+          return `<tr><td>${SB(esc(i.name))}</td><td>${SB(esc(i.val))}${i.unit ? ' ' + esc(i.unit) : ''}（預設 ${SB(esc(dt))}）</td><td><button type="button" class="al-btn" data-wb="go" data-id="${el.id}">前往 →</button></td></tr>`; }).join('')}</tbody></table>`);
+});
+document.addEventListener('change', e => {
+  const x = e.target.closest && e.target.closest('#workBar [data-wbf]'); if(!x) return;
+  const mod = TAB==='beam' ? 'beam' : 'pylon', el = document.getElementById(x.dataset.wbf); if(!el) return;
+  const before = {...WB.vd[mod]}, info = wbFieldInfo(mod, el.id), show = v => el.tagName==='SELECT' ? ([...el.options].find(o => o.value===v) || {text: v}).text : v;
+  const from = el.value; if(from === x.value) return;
+  el.value = x.value; el.dispatchEvent(new Event('input', {bubbles: true})); el.dispatchEvent(new Event('change', {bubbles: true}));
+  wbLog(mod, el.id, info.name, show(from), show(x.value), info.unit, before);
+});
 function renderVerdict(items, alertsId){
   const box=document.getElementById(alertsId);
   const nBad = box ? box.querySelectorAll('.a-bad').length : 0;
@@ -6000,6 +6255,7 @@ function renderVerdict(items, alertsId){
   document.getElementById('verdict').innerHTML = items.map(([st,k,v,sub,go,ids],i)=>{ VD_IDS[i] = ids || [];
     return `<button type="button" class="vd ${st}" data-go="${go}" data-i="${i}" title="${(ids&&ids.length)?'點選列出相關參數，可直接跳到參數表修改':'點選查看'}"><i>${ic[st]}</i><span>${SB(esc(k))} <b>${SB(esc(v))}</b>${sub?` <em>${SB(esc(sub))}</em>`:''}</span></button>`; }).join('');
   vdPopClose();
+  if(mod === (TAB==='beam' ? 'beam' : 'pylon')){ wbSnap(mod, items); wbRender(mod); }
 }
 /* 判定膠囊：一個相關參數就直接跳；多個就彈出參數按鈕選單（另附結果卡片連結） */
 let VD_IDS = {};
@@ -6064,7 +6320,7 @@ function slVerdictTxt(M, C){
   return ` · 彎矩放大 δ = ${Number.isFinite(d) ? f(d,2) : '∞'}`;
 }
 function verdictBlocked(M, alertsId){
-  renderVerdict([['bad','輸入不完整',`${M.badIn.length} 欄`, M.badIn.map(b=>b.label).join('、'), alertsId, M.badIn.map(b=>b.id)]], alertsId);
+  renderVerdict([['bad','無法重算',`缺 ${M.badIn.length} 欄`, M.badIn.map(b=>b.label).join('、'), alertsId, M.badIn.map(b=>b.id)]], alertsId);
 }
 function verdictPylon(M){
   if(M.badIn && M.badIn.length) return verdictBlocked(M, 'alerts');
@@ -6376,7 +6632,7 @@ function rhoLimit(M){
   return {min:1, max:8, ref:'土木401-112 §10.6.1.1'};
 }
 function renderAlerts(M){
-  const items = colAlertItems(M);
+  const items = colAlertItems(M); WB.items.pylon = items;
   renderConfirm('pylon', items, M.badIn && M.badIn.length ? [] : colUncovered(M));
   // L12：「注意」級項目已列於上方「需確認項目」（含去修改按鈕），下方清單不重複顯示（仍計入件數）
   const nDup = items.filter(a=>a.lv==='warn').length;
@@ -6446,7 +6702,7 @@ document.addEventListener('click', e=>{ const b = e.target.closest && e.target.c
 function colAlertItems(M){
   const A=[];
   const add=(lv,t,ids)=>A.push({lv,t,ids});
-  if(M.badIn && M.badIn.length) add('bad',`<b>輸入不完整，已停止計算</b>：${M.badIn.map(b=>`${esc(b.label)}（${esc(b.why)}）`).join('、')}。修正後才顯示結果。`, M.badIn.map(b=>b.id));
+  if(M.badIn && M.badIn.length) add('bad',`<b>無法重算（輸入不完整）</b>：${M.badIn.map(b=>`${esc(b.label)}（${esc(b.why)}）`).join('、')}。請按下方欄位按鈕修正，之後才顯示結果。`, M.badIn.map(b=>b.id));
   if(M.badIn && M.badIn.length) return A;   // 停止計算：以佔位值算出之其他警示不列出
   rangeAlerts('pylon', add);
   if(M.noLoads) add('warn','<b>尚未輸入載重組合</b>：目前以零載重計算，撓曲與剪力檢核結果沒有意義。請於「載重組合」新增。', ['#loadTbl']);
@@ -8340,9 +8596,18 @@ function optRun(mod){
   catch(e){ OPT[mod].pending = false; el.innerHTML = `<div class="alert a-bad">建議配筋計算失敗：${esc(e.message)}</div>`; console.error(e); return; }
   OPT[mod] = {stale:false, res, pending:false};
   if(!res){ el.innerHTML = '<div class="alert a-bad">目前輸入無法計算。</div>'; return; }
-  el.innerHTML = SB((mod==='beam' ? optHtmlBeam(res) : optHtmlCol(res))
+  el.innerHTML = SB(optNowHtml(mod) + (mod==='beam' ? optHtmlBeam(res) : optHtmlCol(res))
     + `<div class="text-[11px] mt-2" style="color:var(--dim)">試算 ${f((performance.now()-t0)/1000,1)} 秒。用鋼量（kg/m）：主筋依鋼筋下料長度表（含錨定、彎鉤延伸與搭接）÷ 構材長；橫向筋含彎鉤延伸；未扣彎曲伸長、未含續接器。</div>`);
   if(window.mathIn) mathIn(el);
+}
+/* 已配筋時先看現況：通過就不必套用建議；不合格時說明建議組合都通過全部檢核（新設計在開場精靈第 ③ 步直接推薦，不顯示） */
+function optNowHtml(mod){
+  if(typeof setupOpen==='function' && setupOpen()) return '';
+  const P = WB.pills[mod] || [], dc = P.find(x => x.k==='撓曲 D/C'), bad = P.find(x => x.k==='不合格');
+  if(!dc || !bad) return '';
+  return bad.st==='bad'
+    ? `<div class="alert a-bad" style="margin-bottom:8px"><b>目前配筋</b>：不合格 ${esc(bad.v)}（撓曲 D/C ${esc(dc.v)}）。下列組合都通過全部檢核，可擇一套用；套用後可在「修改紀錄」看前後差異。</div>`
+    : `<div class="alert a-ok" style="margin-bottom:8px"><b>目前配筋已通過全部檢核</b>（撓曲 D/C ${esc(dc.v)}）。下列為較省料的替代方案，不必套用。</div>`;
 }
 /* 輸入改變：建議頁開著時標示「已過期」，不自動重算（大型斷面試算需數秒） */
 function optStale(mod){
@@ -8904,7 +9169,7 @@ function beamLeg(S, sh, R){
 function svgBeamElev(B, forPrint){
   const {S,R,lay} = B, L = S.ln;
   const W=760, Hh=358, x0=90, x1=W-90;
-  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#0F5F6B',tie2:'#6E9AA0',hot:'#E8B04B',txt:'#151C24',dim:'#5E6B7A',stub:'#B9C3CC',lapz:'#BFDCE0'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
+  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#1E7F86',tie2:'#6E9AA0',hot:'#E8B04B',txt:'#151C24',dim:'#5E6B7A',stub:'#B9C3CC',lapz:'#BFDCE0'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
   const k = (x1-x0)/L;
   let hpx = S.h*k, schematic=false;
   if(hpx < 44){ hpx = 44; schematic = true; }
@@ -8982,7 +9247,7 @@ function svgBeam(B, forPrint){
   const k = Math.min((W-2*pad)/wTot, (Hh-band-2*pad)/S.h);
   const cy = band + (Hh-band)/2;
   const X = x=>W/2 + x*k, Y = y=>cy + (S.h/2 - y)*k;   // y 自底面
-  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#0F5F6B',txt:'#151C24',dim:'#5E6B7A',ann:'#8A5A12',annBad:'#B03A2E',comp:'#F2C14E',tin:'#2F86A6',ct:'#B0407A'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
+  const C = {conc:'#DCE2E8',line:'#8A97A5',bar:'#151C24',tie:'#1E7F86',txt:'#151C24',dim:'#5E6B7A',ann:'#8A5A12',annBad:'#B03A2E',comp:'#F2C14E',tin:'#2F86A6',ct:'#B0407A'};   // 列印／匯出與螢幕同色（黑白與否由使用者列印時決定）
   const o=[`<svg viewBox="0 0 ${W} ${Hh}" xmlns="http://www.w3.org/2000/svg" font-family="ui-sans-serif,system-ui,sans-serif">`];
   o.push(`<rect width="${W}" height="${Hh}" fill="${forPrint?'#fff':'transparent'}"/>`);
 
@@ -9377,7 +9642,7 @@ function renderBeam(){
 }
 
 function renderBeamAlerts(B){
-  const items = beamAlertItems(B);
+  const items = beamAlertItems(B); WB.items.beam = items;
   renderConfirm('beam', items, B.badIn && B.badIn.length ? [] : beamUncovered(B));
   // L12：「注意」級項目已列於上方「需確認項目」（含去修改按鈕），下方清單不重複顯示（仍計入件數）
   const nDup = items.filter(a=>a.lv==='warn').length;
@@ -9389,7 +9654,7 @@ function beamAlertItems(B){
   const {S,m}=B, A=[];
   // fx：隨檢核斷面（正／負彎矩）而異之項目（'flex' 撓曲強度、A_s,min、ε_t；'crack' 裂縫）；併入另一檢核斷面時一律列出
   const add=(lv,t,ids,fx)=>A.push(fx ? {lv,t,ids,fx} : {lv,t,ids});
-  if(B.badIn && B.badIn.length) add('bad',`<b>輸入不完整，已停止計算</b>：${B.badIn.map(b=>`${esc(b.label)}（${esc(b.why)}）`).join('、')}。修正後才顯示結果。`, B.badIn.map(b=>b.id));
+  if(B.badIn && B.badIn.length) add('bad',`<b>無法重算（輸入不完整）</b>：${B.badIn.map(b=>`${esc(b.label)}（${esc(b.why)}）`).join('、')}。請按下方欄位按鈕修正，之後才顯示結果。`, B.badIn.map(b=>b.id));
   if(B.badIn && B.badIn.length) return A;   // 停止計算：以佔位值算出之其他警示不列出
   rangeAlerts('beam', add);
   if(B.noLoads) add('warn','<b>尚未輸入載重組合</b>：目前以零載重計算，檢核結果沒有意義。', ['#bLoadTbl']);
@@ -10861,7 +11126,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     const txt = await file.text();
     const m = MidasIO.parseMct(txt);
     if(!m.counts.elems){ $('midMctInfo').innerHTML = SB(`<span style="color:var(--bad)">${E(file.name)} 沒有 *ELEMENT 資料，不是 Midas 模型檔？</span>`); ST.mct = null; ST.mctName = ''; refresh(); return; }
-    ST.mct = m; ST.mctName = file.name;
+    ST.mct = m; ST.mctName = file.name;   // 內力表讀完才收合（換模型檔時通常也要換內力表）
     $('midMctInfo').innerHTML = SB(`${E(file.name)}：單位 ${m.unit ? E(m.unit.force + ', ' + m.unit.len) : '<b>未寫 *UNIT</b>'}，節點 ${m.counts.nodes}、元素 ${m.counts.elems}、結構群組 ${m.groups.length}、斷面 ${Object.keys(m.sects).length}`);
     if(ST.tbl && !ST.tbl.ok && ST.tbl.needUnit) readTable();
     refresh();
@@ -11017,10 +11282,33 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     $('midSum').innerHTML = SB(!ST.tbl || !ST.tbl.ok ? '尚未讀取內力表' :
       `內力表 ${ST.tbl.rows.length} 列（${E(ST.tbl.units.force)}, ${E(ST.tbl.units.len)}）｜模型 ${ST.mctName ? E(ST.mctName) : '未提供'}｜排除 ${ex.length ? ex.join('、') : '無'}｜`
       + (R ? `${mode}：將建立 <b>${R.loads.length}</b> 列 × ${mems.length} 個構件` : '尚未勾選構件')
-      + (ST.reuse ? `｜已沿用上次匯入（${E(ST.reuse)}）的設定` : ''));
+      + (ST.reuse ? `｜已沿用上次匯入（${E(ST.reuse)}）的設定` : '')
+      + (R ? `<div class="mid-conseq">${conseq(R, mems)}</div>` : ''));
+  }
+  /* 按下去會改什麼：套用＝覆寫目前構件；建立＝構件清單新增或更新（同名同模組者更新） */
+  function conseq(R, mems){
+    const tab = ST.mod==='beam' ? 'beam' : 'pylon', cur = memName(tab==='beam' ? 'bMemName' : 'memName');
+    const upd = mems.filter(m => MEMBERS.some(x => x.name===m.name && x.tab===tab)).length;
+    const a = mems.length===1 ? `套用到目前構件＝覆寫${cur ? `「${E(cur)}」` : '目前構件'}的載重表（${R.loads.length} 列）${$('midSec').checked ? '與斷面尺寸' : ''}，名稱改為 ${E(mems[0].name)}；` : '';
+    return SB(`${a}建立到構件清單＝新增 ${mems.length - upd} 個、更新 ${upd} 個（${mems.slice(0, 4).map(m => E(m.name)).join('、')}${mems.length > 4 ? '…' : ''}）`);
+  }
+  /* 分段狀態：① 檔案讀好後收合成一行摘要（可「修改」展開）；② 勾選構件與選項；③ 預覽與建立 */
+  function steps(mems){
+    const ok = !!(ST.tbl && ST.tbl.ok), n = !ok ? 1 : !mems.length ? 2 : 3;
+    $('midSteps').querySelectorAll('span').forEach(e => { const k = +e.dataset.s; e.classList.toggle('on', k===n); e.classList.toggle('done', k<n); });
+    ov.classList.toggle('src-done', ok && !!ST.mct && !ST.srcOpen);
+    if(ok && ST.mct) $('midSrcSum').innerHTML = SB(`<span class="ok">✓ 資料已讀取</span><span>模型 <b>${E(ST.mctName)}</b>（${ST.mct.unit ? E(ST.mct.unit.force + ', ' + ST.mct.unit.len) : '無 *UNIT'}｜節點 ${ST.mct.counts.nodes}、元素 ${ST.mct.counts.elems}、結構群組 ${ST.mct.groups.length}）</span>`
+      + `<span>內力表 <b>${E(ST.tblName || '貼上')}</b>（${ST.tbl.rows.length} 列、載重 ${ST.tbl.loads.length} 個、${E(ST.tbl.units.force)}, ${E(ST.tbl.units.len)}）</span><button type="button" class="task-link" id="midSrcEdit">修改</button>`);
+  }
+  async function sample(){
+    const get = async f => { const r = await fetch('tests/fixtures/' + f); if(!r.ok) throw new Error(f); return r.text(); };
+    try{ const [m, t] = await Promise.all([get('midas_pier.mct'), get('midas_beam_force.txt')]);
+      await readMct(new File([m], 'midas_pier.mct')); SRC = t; ST.tblName = 'midas_beam_force.txt'; ST.srcOpen = false; readTable(); }
+    catch(e){ $('midMctInfo').innerHTML = '<span style="color:var(--bad)">範例檔讀取失敗（以 file:// 開啟時瀏覽器不允許讀取 tests/fixtures；請用網站版）</span>'; }
   }
   function preview(){
     const mems = members(), P = $('midPrev');
+    steps(mems);
     $('midApply').disabled = mems.length !== 1; $('midBatch').disabled = !mems.length;
     if(!ST.tbl || !ST.tbl.ok){ P.innerHTML = ''; $('midPrevNote').textContent = ''; summary(null, mems); return; }
     if(ST.tbl.kind==='plate' && ST.mod!=='beam'){ $('midApply').disabled = $('midBatch').disabled = true;
@@ -11113,7 +11401,9 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   // 捕獲階段處理 Esc 並停止傳遞：只關本視窗，不連帶關掉下層的載重組合視窗或取消開場精靈
   window.addEventListener('keydown', e => { if(e.key==='Escape' && ov.classList.contains('open') && !$('askOv').classList.contains('open')){ e.stopPropagation(); e.preventDefault(); close(); } }, true);
   $('midMctFile').onchange = e => { readMct(e.target.files[0]).catch(err => { $('midMctInfo').textContent = '讀取失敗：' + err.message; }); };
-  $('midTblRead').onclick = () => { SRC = $('midTblBox').value; ST.tblName = ''; readTable(); };
+  $('midTblRead').onclick = () => { SRC = $('midTblBox').value; ST.tblName = ''; ST.srcOpen = false; readTable(); };
+  $('midSample').onclick = () => sample();
+  ov.addEventListener('click', e => { if(e.target.id==='midSrcEdit'){ ST.srcOpen = true; preview(); } });
   $('midTblFile').onchange = async e => {
     const f = e.target.files[0]; if(!f) return;
     try{ SRC = await tableRowsFromFile(f); ST.tblName = f.name; $('midTblBox').value = ''; readTable(); }
@@ -11127,7 +11417,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   ov.querySelector('.imp-body').addEventListener('input', e => { if(e.target.id==='midElems' || e.target.id==='midName') preview(); });
   $('midApply').onclick = () => applyCurrent();
   $('midBatch').onclick = () => applyBatch();
-  window.midasImport = {open, state: ST};   // 測試用
+  window.midasImport = {open, sample, state: ST};   // sample：任務入口的範例；state：測試用
 })();
 </script>
 <!-- ===================== 從圖說匯入 ===================== -->

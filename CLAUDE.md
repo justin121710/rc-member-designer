@@ -20,7 +20,9 @@
 
 - 與 midas-curve-gen、Midas Civil、StructAudit-AI、書稿的串接規格見 `docs/INTEGRATION.md`；「從 Midas 匯入」的解析在 `core/midas-io.js`（測試 `tests/midas.test.js`、`tests/midas-ui.test.js`）。
 - 計算書「內力來源」段落的文字由 StructAudit-AI `utils/calcbook.py` 擷取；改寫該段文字（`rpLoadSrc`）或案件檔 `loadsrc` 欄位時，同步修改 StructAudit-AI 並重產其示範檔（`examples/make_sample_midas.js`）。
-- 匯入對話框或計算書版面改變時，重拍書稿截圖 `shots/f_rcmd_import.png`、`shots/f_rcmd_src.png`（書稿第 66 章）。
+- 匯入對話框或計算書版面改變時，重拍書稿截圖 `shots/f_rcmd_import.png`（書稿 `node tools/shots/rcmd.js`）、`shots/f_rcmd_src.png`（書稿第 66 章）。
+- 開啟網頁先顯示任務入口（`#taskOv`）：自動化腳本要先按 `#taskSkip`（tests/helpers.js、docs/tutorial/build.js、StructAudit-AI `examples/make_sample_*.js`、書稿 `tools/shots/rcmd.js`）。「用 P1 墩柱範例」以 fetch 讀 `tests/fixtures/midas_pier.mct`、`midas_beam_force.txt`：改檔名或搬位置時同步 `sample()`。
+- 配色依書稿（teal `#1E7F86`、navy `#1F3A5F`），與 midas-curve-gen、StructAudit-AI `.streamlit/config.toml` 一致；改色時三邊一起改。
 - 載重指紋 v2（`loadsKey`）與 StructAudit-AI `loads_key` 必須一致：`tests/fixtures/loads_key_vectors.json` 與其 `tests/data/` 的同名檔是同一份，改規則時兩邊一起改。
 - `inputHash`（計算書表頭「輸入 SHA-256」）不計 `saved`、`members`、`conf`、`review`；StructAudit-AI `utils/pairing.py` 以同一規則重算配對，改快照欄位時要同步。
 - 案件檔 `review` 區塊由 StructAudit-AI 寫入（契約 `docs/INTEGRATION.md` §3.4）：開啟時通知並重算，計算書列「審查修正紀錄」。

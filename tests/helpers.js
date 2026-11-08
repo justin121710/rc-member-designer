@@ -35,8 +35,8 @@ async function openApp(){
   page.on('dialog', d => d.dismiss().catch(() => {}));
   await page.goto(`http://127.0.0.1:${srv.address().port}/index.html`);
   await page.waitForFunction(() => typeof MODEL !== 'undefined' && MODEL && typeof applyPreset === 'function');
-  // 關閉開場精靈（不影響計算）
-  await page.evaluate(() => { const b = document.getElementById('setupSkip'); if(b) b.click(); });
+  // 關閉任務入口與開場精靈（不影響計算）
+  await page.evaluate(() => { for(const id of ['taskSkip','setupSkip']){ const b = document.getElementById(id); if(b && b.closest('.open')) b.click(); } });
   return {page, errors, close: async () => { await browser.close(); srv.close(); }};
 }
 
