@@ -137,6 +137,28 @@ test('流程改善：斷面與匯入時不同 → 計算書提示可能需回 Mi
   assert.match(after, /回 Midas 重分析/);
 });
 
+test('團隊共用：案件檔名帶構件與輸入雜湊、構件總表含輸入雜湊與內力來源', async () => {
+  await page.evaluate(() => document.getElementById('tabPylon').click());
+  const h = await page.evaluate(() => inputHash());
+  // 無頭 Chromium 對非 ASCII 的 download 屬性一律回報 "download"：改記錄 <a download> 的屬性值
+  await page.evaluate(() => { const c0 = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function(){ (window.__dlNames ||= []).push(this.download); return c0.call(this); }; });
+  const [dl] = await Promise.all([page.waitForEvent('download', {timeout: 30000}), page.evaluate(() => caseDownload())]);
+  assert.equal(await page.evaluate(() => window.__dlNames.at(-1)), `P1_COL_案件_${h.slice(0,8)}.json`, '{構件}_案件_{輸入雜湊前 8 碼}');
+  const saved = JSON.parse(fs.readFileSync(await dl.path(), 'utf8'));
+  assert.equal(saved.values.memName, 'P1_COL');
+  assert.equal(await page.evaluate(() => fileStem('RC柱斷面設計檢核計算書')), `P1_COL_RC柱斷面設計檢核計算書_${h.slice(0,8)}`, 'PDF 預設檔名同一規則');
+  assert.equal(await page.evaluate(() => fileStem('X', 'a/b c')), `abc_X_${h.slice(0,8)}`, '檔名去除不合法字元');
+  const [d2] = await Promise.all([page.waitForEvent('download', {timeout: 60000}), page.evaluate(() => memCsv())]);
+  const rows = fs.readFileSync(await d2.path(), 'utf8').replace(/^\ufeff/, '').split('\r\n').map(l => l.split(','));
+  assert.deepEqual(rows[0].slice(-2), ['輸入SHA-256', '內力來源']);
+  const beam = rows.slice(1).find(r => r[1] === '梁／版');
+  assert.ok(beam, '構件清單有匯入的梁');
+  assert.match(beam[7], /^[0-9a-f]{16}$/);
+  assert.match(beam[8], /^midas_pier\.mct／midas_beam_force\.txt|^midas_pier\.mct／貼上／群組 /);
+  assert.match(await page.evaluate(() => window.__dlNames.at(-1)), /^構件總表_\d{4}-\d\d-\d\d\.csv$/);
+});
+
 test('流程改善：開啟含審查紀錄的案件 → 通知、計算書修正紀錄、雜湊不含 review', async () => {
   const d = await page.evaluate(() => { const c = caseSnapshot(); const h0 = inputHash();
     c.values.tieSize = '#5';

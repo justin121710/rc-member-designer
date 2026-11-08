@@ -5436,6 +5436,10 @@ const codeHash = () => { if(_codeHash) return _codeHash;
 // review（審查紀錄）屬於附註，不是計算輸入：不計入雜湊（StructAudit-AI utils/pairing.py 以同一規則重算比對）
 const inputHash = () => { const c = caseSnapshot(); delete c.saved; delete c.members; delete c.conf; delete c.review; return sha256(JSON.stringify(c)); };
 const traceText = () => `v${APP_VERSION}｜程式 ${codeHash()}｜輸入 SHA-256 ${inputHash().slice(0,16)}`;
+/* 團隊共用資料夾命名（docs/TEAM_FOLDER.md）：{構件}_{文件}_{輸入雜湊前 8 碼}。同一版輸入的案件檔、計算書 PDF、Excel
+   檔名帶相同雜湊（＝計算書表頭「輸入 SHA-256」前 8 碼），在資料夾中排在一起；StructAudit-AI 審查報告沿用同一規則 */
+const fileSafe = t => String(t ?? '').replace(/[\\/:*?"<>|\s]+/g,'');
+const fileStem = (doc, mn) => [fileSafe(mn ?? memName(TAB==='beam'?'bMemName':'memName')), doc, inputHash().slice(0,8)].filter(Boolean).join('_');
 let CASE_READY = false, CASE_T = 0;
 function caseInputs(){
   // 斷面型式、構件名稱、範本選單搬進開場視窗後不在 #app 內：須明列（舊版漏存，開啟案件時斷面型式與名稱不會還原）
@@ -5588,13 +5592,21 @@ function caseNotice(){
 const MEM_KEY = 'rcsd.members.v1';
 var MEMBERS = [], MEM_RES = {};
 const memSave = () => { try{ localStorage.setItem(MEM_KEY, JSON.stringify(MEMBERS)); }catch(e){} caseAutosave(); };
+/* 內力來源一行摘要（構件總表、團隊專案狀態表用）：模型／內力表／群組，並標示匯入後修改、斷面已變更 */
+function loadSrcLine(mod){
+  const a = LOADSRC && LOADSRC[mod]; if(!a) return '手動輸入';
+  const stale = secvDiff(mod, a);
+  return [a.mct, a.table || '貼上', a.group && ('群組 ' + a.group)].filter(Boolean).join('／')
+    + (MidasIO.loadsEdited(mod==='beam' ? BLOADS : LOADS, a.key) ? '（匯入後已修改）' : '')
+    + (stale.length ? '（斷面或材料已變更，須重分析）' : '');
+}
 function memSummary(){
-  const beam = TAB==='beam';
-  if(beam){ const B = BMODEL || renderBeam(); if(!B || (B.badIn && B.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'輸入不完整'};
-    return {dc: beamDcGov(B).dc, bad: beamAlertItems(B).filter(a=>a.lv==='bad').length, pend: confPending('beam').length,
+  const beam = TAB==='beam', mod = beam ? 'beam' : 'pylon', h = inputHash().slice(0,16), src = loadSrcLine(mod);
+  if(beam){ const B = BMODEL || renderBeam(); if(!B || (B.badIn && B.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'輸入不完整', h, src};
+    return {dc: beamDcGov(B).dc, bad: beamAlertItems(B).filter(a=>a.lv==='bad').length, pend: confPending('beam').length, h, src,
             txt: `${B.S.slab ? '版' : B.S.type==='T' ? 'T 梁' : '矩形梁'} ${f(B.S.bw,0)}×${f(B.S.h,0)}`}; }
-  const M = MODEL || render(); if(!M || (M.badIn && M.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'輸入不完整'};
-  return {dc: M.ctrlFlex.dc, bad: colAlertItems(M).filter(a=>a.lv==='bad').length, pend: confPending('pylon').length,
+  const M = MODEL || render(); if(!M || (M.badIn && M.badIn.length)) return {dc:NaN, bad:1, pend:0, txt:'輸入不完整', h, src};
+  return {dc: M.ctrlFlex.dc, bad: colAlertItems(M).filter(a=>a.lv==='bad').length, pend: confPending('pylon').length, h, src,
           txt: M.s.type==='circle' ? `圓形 D${f(M.s.D,0)}` : `${M.s.type==='box'?'箱型':'矩形'} ${f(M.s.B,0)}×${f(M.s.H,0)}`};
 }
 function memRender(){
@@ -5639,8 +5651,9 @@ async function memEach(fn){
 async function memBatch(){ await memEach(async m => { MEM_RES[m.id] = memSummary(); }); memRender(); }
 async function memCsv(){
   await memBatch();
-  const rows = [['構件','模組','斷面','撓曲D/C','不合格項數','需確認未完成','判定']].concat(MEMBERS.map(m => { const r = MEM_RES[m.id] || {};
-    return [m.name, m.tab==='beam'?'梁／版':'柱', r.txt||'', Number.isFinite(r.dc) ? r.dc.toFixed(3) : '∞', r.bad??'', r.pend??'', r.bad ? 'FAIL' : r.pend ? '未完成' : 'PASS']; }));
+  // 後兩欄供貼到團隊專案狀態表（docs/TEAM_FOLDER.md）：輸入 SHA-256 前 16 碼＝計算書表頭，案件檔名取前 8 碼
+  const rows = [['構件','模組','斷面','撓曲D/C','不合格項數','需確認未完成','判定','輸入SHA-256','內力來源']].concat(MEMBERS.map(m => { const r = MEM_RES[m.id] || {};
+    return [m.name, m.tab==='beam'?'梁／版':'柱', r.txt||'', Number.isFinite(r.dc) ? r.dc.toFixed(3) : '∞', r.bad??'', r.pend??'', r.bad ? 'FAIL' : r.pend ? '未完成' : 'PASS', r.h||'', r.src||'']; }));
   const csv = '\ufeff' + rows.map(r => r.map(csvCell).join(',')).join('\r\n');
   const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(new Blob([csv], {type:'text/csv'})), download: `構件總表_${new Date().toISOString().slice(0,10)}.csv`});
   document.body.appendChild(a); a.click(); a.remove();
@@ -5884,8 +5897,7 @@ async function exportXlsx(fname){
     inp.draft = draft;
     const out = TAB==='beam' ? RCXLSX.buildBeam(ExcelJS, inp) : RCXLSX.buildColumn(ExcelJS, inp);
     const buf = await RCXLSX.toBuffer(out, JSZip);
-    const d=new Date(), p=n=>String(n).padStart(2,'0');
-    const name = (draft ? '草稿_' : '') + (typeof fname==='string' && fname ? fname.replace(/[\\/:*?"<>|\s]+/g,'') + '_' : '') + (TAB==='beam'?'RC梁版計算書':'RC柱計算書') + `_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.xlsx`;
+    const name = (draft ? '草稿_' : '') + fileStem(TAB==='beam'?'RC梁版計算書':'RC柱計算書', typeof fname==='string' && fname ? fname : undefined) + '.xlsx';
     const url=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
     const a=Object.assign(document.createElement('a'),{href:url,download:name}); document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(url),2000);
@@ -5898,9 +5910,10 @@ let CASE_BASE = null;
 const caseKey = () => { const c = caseSnapshot(); delete c.saved; delete c.conf; delete c.appVersion; return JSON.stringify(c); };
 const caseMark = () => { try{ CASE_BASE = caseKey(); }catch(e){} };
 function caseDownload(){
-  const c = caseSnapshot(), d = new Date(), p = n=>String(n).padStart(2,'0');
+  const c = caseSnapshot();
   caseMark();
-  const name = `RC構件設計_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.json`;
+  const mn = fileSafe(memName(TAB==='beam'?'bMemName':'memName'));
+  const name = fileStem(mn ? '案件' : 'RC構件設計_案件', mn) + '.json';
   const url = URL.createObjectURL(new Blob([JSON.stringify(c,null,1)], {type:'application/json'}));
   const a = Object.assign(document.createElement('a'), {href:url, download:name});
   document.body.appendChild(a); a.click(); a.remove();
@@ -10478,10 +10491,8 @@ function pinFit(mod){
     }
     buildActive();
     // 存成 PDF 時預設檔名取自 document.title，暫時換成計算書名稱
-    const t0 = document.title, d = new Date(), p = n=>String(n).padStart(2,'0');
-    const mn = memName(TAB==='beam'?'bMemName':'memName').replace(/[\\/:*?"<>|\s]+/g,'');
-    document.title = (mn ? mn+'_' : '') + (TAB==='beam' ? ((BMODEL&&BMODEL.S.slab)?'RC版設計檢核計算書':'RC梁斷面設計檢核計算書') : colReportTitle(MODEL||render()).replace(/\s|／/g,''))
-      + `_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}`;
+    const t0 = document.title;
+    document.title = fileStem(TAB==='beam' ? ((BMODEL&&BMODEL.S.slab)?'RC版設計檢核計算書':'RC梁斷面設計檢核計算書') : colReportTitle(MODEL||render()).replace(/\s|／/g,''));
     window.addEventListener('afterprint', ()=>{ document.title = t0; }, {once:true});
     setTimeout(()=>{ PRINT_OK = true; try{ window.print(); } finally{ PRINT_OK = false; } document.title = t0; },260);   // 部分瀏覽器不觸發 afterprint
   };

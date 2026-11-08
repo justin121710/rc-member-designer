@@ -1,0 +1,4 @@
+﻿每次重跑 Midas 分析並發出新內力表，就建一個版次資料夾 R01、R02…
+內含：{案號}_模型_R{nn}.mct（完整 .mct，含 *SECTION、*MATERIAL、*THICKNESS、*GROUP）、
+      {案號}_BeamForce_R{nn}.txt、{案號}_PlateForce_R{nn}.txt（分檔時加範圍，如 _P1-P4）。
+發行後在專案狀態表「模型版次」頁加一列，並把該 R 資料夾設為唯讀，不再修改。

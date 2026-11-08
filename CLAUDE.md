@@ -24,3 +24,6 @@
 - 載重指紋 v2（`loadsKey`）與 StructAudit-AI `loads_key` 必須一致：`tests/fixtures/loads_key_vectors.json` 與其 `tests/data/` 的同名檔是同一份，改規則時兩邊一起改。
 - `inputHash`（計算書表頭「輸入 SHA-256」）不計 `saved`、`members`、`conf`、`review`；StructAudit-AI `utils/pairing.py` 以同一規則重算配對，改快照欄位時要同步。
 - 案件檔 `review` 區塊由 StructAudit-AI 寫入（契約 `docs/INTEGRATION.md` §3.4）：開啟時通知並重算，計算書列「審查修正紀錄」。
+- 多人共用採公司資料存放系統（`docs/TEAM_FOLDER.md`，INTEGRATION §3.6、§7.1）：案件檔、PDF（列印標題）、Excel 預設檔名 `{構件}_{文件}_{雜湊8}`（`fileStem`），
+  StructAudit-AI `utils/report_model.py` 的 `file_stem`、`case_file_name` 用同一規則；改規則時兩邊與書稿第 66 章一起改。
+  資料夾範本與 `專案狀態表.xlsx` 由 `docs/team-folder/build.js` 產生（改了規則或狀態表欄位就重產並提交 `docs/team-folder/範本/`）。
