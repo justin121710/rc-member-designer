@@ -11192,7 +11192,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   function buildLoads(){
     const w = $('midLoads'), pd = $('midPD');
     if(!ST.tbl || !ST.tbl.ok){ w.innerHTML = ''; pd.innerHTML = '<option value="">不填</option>'; return; }
-    w.innerHTML = SB(ST.tbl.loads.map((l, i) => `<label><input type="checkbox" data-l="${i}"${MidasIO.isEnvelope(l) || isCase(l) ? '' : ' checked'}> ${E(l)}${MidasIO.isEnvelope(l) ? ' <span class="mid-info">（包絡）</span>' : isCase(l) ? ' <span class="mid-info">（單一工況）</span>' : ''}</label>`).join(''));
+    w.innerHTML = SB(ST.tbl.loads.map((l, i) => `<label><input type="checkbox" data-l="${i}"${MidasIO.isEnvelope(l) || isCase(l) ? '' : ' checked'}> ${E(l)}${MidasIO.isEnvelope(l) ? ' <span class="mid-info">（包絡）</span>' : MidasIO.isRS(l) ? ' <span class="mid-info">（反應譜：無正負號）</span>' : isCase(l) ? ' <span class="mid-info">（單一工況）</span>' : ''}</label>`).join(''));
     const pref = ST.pdPref ? ST.tbl.loads.indexOf(ST.pdPref) : -1, dl = pref >= 0 ? pref : ST.tbl.loads.findIndex(isDead);
     pd.innerHTML = '<option value="">不填</option>' + ST.tbl.loads.map((l, i) => `<option value="${i}"${i===dl ? ' selected' : ''}>${E(l)}</option>`).join('');
   }
@@ -11277,7 +11277,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   }
   function summary(R, mems){
     const all = ST.tbl ? ST.tbl.loads : [], used = new Set(chosenLoads());
-    const ex = all.filter(l => !used.has(l)).map(l => `${E(l)}${MidasIO.isEnvelope(l) ? '（包絡）' : isCase(l) ? '（單一工況）' : ''}`);
+    const ex = all.filter(l => !used.has(l)).map(l => `${E(l)}${MidasIO.isEnvelope(l) ? '（包絡）' : MidasIO.isRS(l) ? '（反應譜）' : isCase(l) ? '（單一工況）' : ''}`);
     const mode = ov.querySelector('input[name=midSel]:checked').value==='all' ? '全部組合' : '極值篩選';
     $('midSum').innerHTML = SB(!ST.tbl || !ST.tbl.ok ? '尚未讀取內力表' :
       `內力表 ${ST.tbl.rows.length} 列（${E(ST.tbl.units.force)}, ${E(ST.tbl.units.len)}）｜模型 ${ST.mctName ? E(ST.mctName) : '未提供'}｜排除 ${ex.length ? ex.join('、') : '無'}｜`

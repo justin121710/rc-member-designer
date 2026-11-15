@@ -166,6 +166,9 @@ const MidasIO = (() => {
     return null;
   }
   const isEnvelope = name => /\((max|min|all)\)\s*$/i.test(String(name || ''));
+  /* 反應譜工況（Midas 以 (RS) 後綴列出）：各分量為絕對值包絡、沒有正負號 */
+  const isRS = name => /\(rs\)\s*$/i.test(String(name || ''));
+  const RS_WARN = rs => `有反應譜工況（${rs.slice(0, 4).join('、')}）：各分量是振態組合後的絕對值包絡，沒有正負號、彼此不同時，不能直接當設計內力；請用含恆載的地震組合，並分別檢核恆載軸力＋地震軸力與恆載軸力－地震軸力（軸力最小＋彎矩最大），預設不勾選。`;
   /* 解析內力表（文字或二維陣列）。單位：標題括號 > fallback（.mct *UNIT 或手選）。
      回傳 rows（已換算 tf、tf·m）、loads（出現順序）、units、warnings、skipped */
   function parseForceTable(input, fallback){
@@ -220,6 +223,8 @@ const MidasIO = (() => {
     if(idx.part == null) warnings.push('表格沒有 Part（位置）欄，全部視為元素 I 端。');
     const env = loads.filter(isEnvelope);
     if(env.length || out.some(r => r.comp)) warnings.push(`有包絡組合（${env.slice(0, 4).join('、') || 'Component 欄'}）：包絡各分量不是同時發生，預設不勾選；設計請用一般組合的同時內力。`);
+    const rs = loads.filter(isRS);
+    if(rs.length) warnings.push(RS_WARN(rs));
     return {ok: true, rows: out, loads, envelope: env, units: {force: fU, len: lU, src}, warnings, skipped, cols: idx};
   }
 
@@ -272,7 +277,7 @@ const MidasIO = (() => {
   const r3 = v => Math.round(v*1000)/1000 + 0;
   function columnLoads(table, elemIds, mct, opts){
     opts = opts || {};
-    const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l)));
+    const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l) && !isRS(l)));
     const rows = table.rows.filter(r => set.has(r.elem) && sel.has(r.load)).map(r => ({r, f: colMap(r, opts.swap)}));
     const warnings = [];
     if(!rows.length) return {loads: [], ctrl: [], src: [], warnings: ['所選構件與載重在內力表中沒有資料列。']};
@@ -316,7 +321,7 @@ const MidasIO = (() => {
      opts: {loads, sagPos:true（Midas 正 M_y＝下緣受拉）, all:false} */
   function beamLoads(table, elemIds, mct, opts){
     opts = opts || {};
-    const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l)));
+    const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l) && !isRS(l)));
     const s = opts.sagPos === false ? -1 : 1;
     const per = new Map();
     let mzMax = 0, mzTag = '';
@@ -423,6 +428,8 @@ const MidasIO = (() => {
     if(missing.length) warnings.push(`表格缺少欄位 ${missing.join('、')}，剪力以 0 計。`);
     const env = loads.filter(isEnvelope);
     if(env.length) warnings.push(`有包絡組合（${env.slice(0, 4).join('、')}）：包絡各分量不是同時發生，Wood-Armer 須用同時之 M_xx、M_yy、M_xy，預設不勾選。`);
+    const rs = loads.filter(isRS);
+    if(rs.length) warnings.push(RS_WARN(rs));
     return {ok: true, kind: 'plate', rows: out, loads, envelope: env, units: {force: fU, len: dU, src}, warnings, skipped, cols: idx};
   }
   /* 依標題自動判斷梁內力或版內力 */
@@ -447,7 +454,7 @@ const MidasIO = (() => {
      opts: {loads, dir:'x'|'y', sagPos:true（Midas 正 M＝下緣受拉）, all:false} */
   function slabLoads(table, elemIds, mct, opts){
     opts = opts || {};
-    const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l)));
+    const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l) && !isRS(l)));
     const s = opts.sagPos === false ? -1 : 1, Y = opts.dir === 'y';
     const per = new Map();
     let fMax = 0, fTag = '';
@@ -518,7 +525,7 @@ const MidasIO = (() => {
   /* 匯入後載重表是否被修改：依記錄時的指紋版本比對 */
   const loadsEdited = (loads, key) => String(key || '').startsWith('k2:') ? loadsKey(loads) !== key : loadsKeyV1(loads) !== key;
 
-  return {VERSION, unitOf, forceK, lenK, expandList, parseMct, parseSection, fcFromName, sectionToRc, parsePart, isEnvelope,
+  return {VERSION, unitOf, forceK, lenK, expandList, parseMct, parseSection, fcFromName, sectionToRc, parsePart, isEnvelope, isRS,
           parseForceTable, memberInfo, columnLoads, beamLoads, deadAxial, loadsKey, loadsKeyV1, loadsEdited, keyNum,
           isPlateTable, parsePlateTable, parseAnyTable, woodArmer, slabLoads, plateInfo};
 })();

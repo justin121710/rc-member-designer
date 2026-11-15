@@ -99,6 +99,22 @@ test('柱：正負號、頂底配對、控制組合、包絡排除', () => {
   assert.equal(M.deadAxial(t, [101, 102, 103], m, 'DL'), 600);
 });
 
+test('反應譜工況 (RS)：辨識、警告、預設不勾選（《應用工程實例》實例 19）', () => {
+  assert.equal(M.isRS('EQX(RS)'), true); assert.equal(M.isRS('eqy (rs) '), true);
+  assert.equal(M.isRS('cLCB1'), false); assert.equal(M.isRS('RSX'), false); assert.equal(M.isEnvelope('EQX(RS)'), false);
+  const txt = TBL.trim() + '\n101\tEQX(RS)\tI[1]\t50\t0\t30\t0\t200\t0\n103\tEQX(RS)\tJ[4]\t50\t0\t30\t0\t180\t0';
+  const t = M.parseForceTable(txt);
+  assert.ok(t.ok, t.why);
+  assert.ok(t.loads.includes('EQX(RS)'));
+  assert.ok(t.warnings.some(w => /反應譜/.test(w) && /EQX\(RS\)/.test(w)));
+  assert.ok(!M.parseForceTable(TBL).warnings.some(w => /反應譜/.test(w)), '沒有 RS 時不警告');
+  const m = M.parseMct(MCT);
+  const d = M.columnLoads(t, [101, 102, 103], m, {});
+  assert.ok(!d.loads.some(l => /\(RS\)/.test(l.name)), '預設不含 RS');
+  const u = M.columnLoads(t, [101, 102, 103], m, {loads: ['EQX(RS)']});
+  assert.ok(u.loads.some(l => /\(RS\)/.test(l.name)), '使用者明確勾選時仍可匯入');
+});
+
 test('柱：沒有 .mct 時依元素編號推頂底並警示', () => {
   const t = M.parseForceTable(TBL);
   const r = M.columnLoads(t, [101, 102, 103], null, {loads: ['cLCB2']});
