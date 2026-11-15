@@ -507,7 +507,7 @@ body .setup-dims input{width:100%;padding:5px 7px;font-size:13.5px;border:1px so
 #taskOv .setup-body{gap:12px;padding:16px 18px}
 .task-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:640px){.task-grid{grid-template-columns:1fr}}
-body .task-c{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;padding:14px 16px;min-height:118px;
+body .task-c{display:flex;flex-direction:column;align-items:flex-start;gap:5px;text-align:left;padding:14px 16px;min-height:84px;
   border:1px solid var(--line2);border-left:4px solid var(--acc);border-radius:8px;background:var(--panel)}
 body .task-c:hover{border-color:var(--acc);background:var(--acc-soft)}
 .task-c b{font-size:15px;color:var(--brand)}
@@ -796,16 +796,16 @@ img,video{max-width:100%;height:auto}
      控制項是原本的元素搬進來（id 與事件監聽不變），compute() 照舊以 id 讀取。 -->
 <div id="taskOv" role="dialog" aria-modal="true" aria-labelledby="taskTtl">
   <div class="setup-dlg task-dlg">
-    <div class="setup-head"><b id="taskTtl">你現在要完成哪一件事？</b><span>選一項開始；之後都能從頂列進入其他功能，熟手可勾選下方直接進入主畫面。</span></div>
+    <div class="setup-head"><b id="taskTtl">你現在要完成哪一件事？</b></div>
     <div class="setup-body">
       <div id="taskLast"></div>
       <div class="task-grid">
-        <button type="button" class="task-c" data-t="midas"><b>從 Midas 結果開始設計</b><span>已有模型與內力：讀完整 .mct 與內力表，依結構群組建立構件，來源寫進計算書。</span><em>不必先填尺寸，斷面由模型帶入</em></button>
-        <button type="button" class="task-c" data-t="manual"><b>手動驗算一個構件</b><span>柱、梁或版：選斷面與範本，輸入尺寸與載重組合，取得建議配筋。</span><em>三步：斷面 → 載重 → 建議配筋</em></button>
-        <button type="button" class="task-c" data-t="open"><b>繼續已有案件</b><span>開啟案件檔（.json）。含審查修改時，會列出改了哪些欄位並重算。</span><em>多人共用時從共用資料夾開最新的檔</em></button>
-        <button type="button" class="task-c" data-t="review"><b>審查已完成的設計</b><span>把計算書 PDF 與同一組雜湊的案件檔交給 StructAudit-AI 詰問審查。</span><em>另開審查工具</em></button>
+        <button type="button" class="task-c" data-t="midas"><b>從 Midas 結果開始設計</b><span>讀 .mct 與內力表，依群組建立構件</span></button>
+        <button type="button" class="task-c" data-t="manual"><b>手動驗算一個構件</b><span>斷面 → 載重 → 建議配筋</span></button>
+        <button type="button" class="task-c" data-t="open"><b>繼續已有案件</b><span>開啟案件檔 .json</span></button>
+        <button type="button" class="task-c" data-t="review"><b>審查已完成的設計</b><span>StructAudit-AI</span></button>
       </div>
-      <div class="task-demo">第一次用？<button type="button" class="task-link" data-t="sample">用 P1 墩柱範例走一次「從 Midas 匯入」</button><span>（範例檔，不影響你的案件）</span></div>
+      <div class="task-demo"><button type="button" class="task-link" data-t="sample">用 P1 墩柱範例試一次</button></div>
     </div>
     <div class="setup-act">
       <label style="font-size:12px;color:var(--dim);display:inline-flex;gap:4px;align-items:center;white-space:nowrap"><input type="checkbox" id="taskNoShow" style="width:15px;height:15px;flex:0 0 15px;margin:0">下次開啟直接進入主畫面</label>
@@ -1000,7 +1000,7 @@ img,video{max-width:100%;height:auto}
       <div class="pin-mk ok" id="loadsMk">✓</div>
       <div style="flex-grow:1;min-width:0">
         <div class="pin-gl">載重組合</div>
-        <div class="pin-gs"><span id="loadsN">—</span>　點開編輯</div>
+        <div class="pin-gs"><span id="loadsN">—</span></div>
       </div>
     </div>
   </div>
@@ -1170,7 +1170,6 @@ img,video{max-width:100%;height:auto}
     <div class="card" data-pane="fig">
       <div class="flex items-center justify-between mb-1">
         <h2 class="!mb-0">斷面配筋圖（即時）</h2>
-        <div class="text-[11.5px]" style="color:var(--dim)">SVG 向量 · 主筋依號數按真實直徑比例繪製</div>
       </div>
       <div id="cTieBar" class="tie-bar collapsed" role="toolbar" aria-label="繫筋配置">
         <span class="tie-mode" id="cTieMode">繫筋：自動</span>
@@ -6246,7 +6245,7 @@ function renderVerdict(items, alertsId){
   const mod = alertsId==='bAlerts' ? 'beam' : 'pylon', nConf = CONF_ITEMS[mod].length, nPend = confPending(mod).length;
   // 三級：不合格（紅）／需確認未完成（琥珀，阻擋列印）／參考（提醒項目，於警示分頁）
   items = items.concat([[nBad?'bad':'ok','不合格', nBad ? `${nBad} 項` : '無', '', alertsId, alIds.filter(x=>box && box.querySelector(`.a-bad .al-btn[data-pid="${x}"]`))]]);
-  if(nConf) items.push([nPend?'warn':'ok','需確認', nPend ? `${nPend} / ${nConf} 項未確認` : `${nConf} 項已確認`, nPend ? '列印前須勾選' : '', alertsId, []]);
+  if(nConf) items.push([nPend?'warn':'ok','需確認', nPend ? `${nPend} / ${nConf} 項未確認` : `${nConf} 項已確認`, '', alertsId, []]);
   const bdg = box && box.closest('.ws') && box.closest('.ws').querySelector('.ws-badge');
   if(bdg){ bdg.hidden = !(nBad||nWarn); bdg.textContent = nBad||nWarn; bdg.className = 'ws-badge ' + (nBad?'bad':'warn'); }
   const ic={ok:'✓',warn:'!',bad:'✗',na:'?'};
@@ -10431,7 +10430,6 @@ function pinRender(mod){
       <div class="pin-mk ${worst}">${worst==='ok'?'✓':worst==='warn'?'!':'✗'}</div>
       <div style="flex-grow:1;min-width:0">
         <div class="pin-gl">${esc(g[0])}</div>
-        <div class="pin-gs">${g[1].length} 項</div>
       </div></div>`;
   });
   st.rail.innerHTML = SB(rh);

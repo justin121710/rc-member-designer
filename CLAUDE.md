@@ -29,3 +29,6 @@
 - 多人共用採公司資料存放系統（`docs/TEAM_FOLDER.md`，INTEGRATION §3.6、§7.1）：案件檔、PDF（列印標題）、Excel 預設檔名 `{構件}_{文件}_{雜湊8}`（`fileStem`），
   StructAudit-AI `utils/report_model.py` 的 `file_stem`、`case_file_name` 用同一規則；改規則時兩邊與書稿第 66 章一起改。
   資料夾範本與 `專案狀態表.xlsx` 由 `docs/team-folder/build.js` 產生（改了規則或狀態表欄位就重產並提交 `docs/team-folder/範本/`）。
+
+## UI／UX 原則（四個專案共用，2026-11-15）
+避免不必要的次要標籤與文字說明，讓版面自己說話：移除多餘小字、輔助標籤與冗長說明；以排版、留白、圖示與視覺層級傳達功能；極簡、不擁擠。改了任務入口或匯入視窗要同步教學原稿與書稿截圖。
