@@ -195,3 +195,26 @@ test('流程改善：開啟含審查紀錄的案件 → 通知、計算書修正
   assert.equal(r.st, 'recalculated');
   assert.equal(r.same, true, 'review 不計入輸入雜湊');
 });
+
+test('SAP2000：.s2k 模型＋Element Forces 表格 → 群組、套用、計算書寫 SAP2000 與 P／M3 對應', async () => {
+  await page.evaluate(() => window.midasImport.open('pylon'));
+  if(await page.isVisible('#midSrcEdit')) await page.click('#midSrcEdit');
+  await page.setInputFiles('#midMctFile', path.join(FIX, 'sap_pier.s2k'));
+  await page.waitForFunction(() => /SAP2000/.test(document.getElementById('midMctInfo').textContent));
+  assert.match(await page.textContent('#midMctInfo'), /結構群組 2/);
+  await page.fill('#midTblBox', fs.readFileSync(path.join(FIX, 'sap_frame_force.txt'), 'utf8'));
+  await page.click('#midTblRead');
+  assert.match(await page.textContent('#midTblInfo'), /SAP2000.*38 列.*載重 4 個.*TONF, M/);
+  const ld = await page.$$eval('#midLoads input', xs => xs.map(x => x.checked));
+  assert.deepEqual(ld, [false, true, true, false], 'DL(ST)（單一工況）、cLCB3(max)（包絡）不勾選');
+  await page.check('#midGrpWrap input[data-g="0"]');
+  await page.click('#midApply'); await confirm();
+  const r = await page.evaluate(() => ({B: +document.getElementById('B').value, H: +document.getElementById('H').value,
+    loads: LOADS.map(l => [l.name, l.pos || '', l.Pu, l.Mux]), from: LOADSRC.pylon.from}));
+  assert.equal(r.B, 180); assert.equal(r.H, 240); assert.equal(r.from, 'sap');
+  assert.deepEqual(r.loads.find(l => l[0]==='cLCB2' && l[1]==='top'), ['cLCB2', 'top', 820, 300], '與 Midas 版相同');
+  const rp = await page.evaluate(() => { buildReport(MODEL || render()); return document.getElementById('report').innerText; });
+  assert.match(rp, /由 SAP2000 結果表格匯入/); assert.match(rp, /M_ux = M3|Mux = M3|M ux = M3/);
+  const rt = await page.evaluate(() => { const j = JSON.parse(JSON.stringify(caseSnapshot())); LOADSRC = {pylon:null, beam:null}; caseApply(j); return LOADSRC.pylon.from; });
+  assert.equal(rt, 'sap', '案件檔來回保留來源程式');
+});

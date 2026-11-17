@@ -870,22 +870,22 @@ img,video{max-width:100%;height:auto}
 <!-- ===================== 從 Midas 匯入（工具整合 M1，docs/INTEGRATION.md） ===================== -->
 <div id="midOv" class="ov-shell" role="dialog" aria-modal="true" aria-labelledby="midTtl">
   <div class="imp-dlg" style="max-width:1060px">
-    <div class="imp-head"><b id="midTtl">從 Midas 匯入內力</b><span class="imp-note" id="midMod"></span>
+    <div class="imp-head"><b id="midTtl">從 Midas／SAP2000 匯入內力</b><span class="imp-note" id="midMod"></span>
       <div class="setup-steps mid-steps" id="midSteps" style="margin:0 0 0 8px"><span data-s="1">① 提供資料</span><span data-s="2">② 確認對應</span><span data-s="3">③ 建立構件</span></div>
       <div class="imp-grow"></div><button id="midClose" type="button">關閉</button></div>
     <div class="imp-body text-[12.5px]">
       <div class="mid-step" id="midSrcSum"></div>
       <div id="midSrc">
-      <div class="mid-step"><b>1. 模型 .mct（建議）</b> <button type="button" id="midSample" class="task-link">用 P1 墩柱範例</button>
-        <span class="imp-note">midas-curve-gen 產生的 .mct，或 Midas Civil 2022 匯出的完整模型（File &gt; Export &gt; MCT File）。用來依結構群組歸屬元素、判定頂底節點，並讀取斷面尺寸與單位。</span>
-        <div class="flex gap-2 mt-1" style="align-items:center;flex-wrap:wrap"><input id="midMctFile" type="file" accept=".mct,.txt"><span id="midMctInfo" class="mid-info"></span></div>
+      <div class="mid-step"><b>1. 模型 .mct／.s2k（建議）</b> <button type="button" id="midSample" class="task-link">用 P1 墩柱範例</button>
+        <span class="imp-note">midas-curve-gen 產生的 .mct，或 Midas Civil 2022 匯出的完整模型（File &gt; Export &gt; MCT File）；SAP2000 為 File &gt; Export &gt; SAP2000 .s2k Text File。用來依群組歸屬元素、判定頂底節點，並讀取斷面尺寸與單位。</span>
+        <div class="flex gap-2 mt-1" style="align-items:center;flex-wrap:wrap"><input id="midMctFile" type="file" accept=".mct,.s2k,.$2k,.txt"><span id="midMctInfo" class="mid-info"></span></div>
       </div>
       <div class="mid-step"><b>2. 內力表</b>
-        <span class="imp-note">Results &gt; Result Tables &gt; Beam &gt; Force（梁、柱、基樁），或 Plate &gt; Force（版，單位寬內力；在梁／版模組匯入）：在表格上全選複製（含標題列）貼到下方，或選 .txt／.csv／.xlsx 檔。只用一般載重組合（同時內力）；包絡組合預設不勾選。</span>
+        <span class="imp-note">Results &gt; Result Tables &gt; Beam &gt; Force（梁、柱、基樁），或 Plate &gt; Force（版，單位寬內力；在梁／版模組匯入）；SAP2000 為 Element Forces - Frames：在表格上全選複製（含標題列）貼到下方，或選 .txt／.csv／.xlsx／.s2k 檔。只用一般載重組合（同時內力）；包絡組合預設不勾選。</span>
         <textarea id="midTblBox" rows="4" class="w-full mt-1 text-[12px] p-2 rounded" style="background:var(--panel);border:1px solid var(--line);color:var(--txt)"
           placeholder="Elem&#9;Load&#9;Part&#9;Axial (tonf)&#9;Shear-y (tonf)&#9;Shear-z (tonf)&#9;Torsion (tonf*m)&#9;Moment-y (tonf*m)&#9;Moment-z (tonf*m)"></textarea>
         <div class="flex gap-2 mt-1" style="align-items:center;flex-wrap:wrap">
-          <button id="midTblRead" type="button" class="btn-primary">讀取內力表</button><input id="midTblFile" type="file" accept=".txt,.csv,.tsv,.xlsx">
+          <button id="midTblRead" type="button" class="btn-primary">讀取內力表</button><input id="midTblFile" type="file" accept=".txt,.csv,.tsv,.xlsx,.s2k,.$2k">
           <span id="midUnitRow" class="hidden">表格單位：<select id="midUF"><option value="TONF">tonf</option><option value="KN">kN</option><option value="KGF">kgf</option><option value="N">N</option></select>
             <select id="midUL"><option value="M">m</option><option value="CM">cm</option><option value="MM">mm</option></select></span>
         </div>
@@ -1478,7 +1478,8 @@ img,video{max-width:100%;height:auto}
 <div id="report"></div>
 
 <script src="core/rc-core.js"></script>  <!-- U9：純計算函式（不讀 DOM），網頁與 Node 單元測試共用 -->
-<script src="core/midas-io.js"></script>  <!-- 工具整合 M1：Midas 內力表與 .mct 解析（docs/INTEGRATION.md） -->
+<script src="core/midas-io.js"></script>
+<script src="core/sap-io.js"></script>  <!-- SAP2000 Element Forces - Frames 與 .s2k 模型檔（輸出與 midas-io 相同結構） -->  <!-- 工具整合 M1：Midas 內力表與 .mct 解析（docs/INTEGRATION.md） -->
 <script>
 "use strict";
 /* =========================================================================
@@ -5614,7 +5615,7 @@ function loadSrcClean(x){
   const S = (v, n=200) => v==null ? '' : String(v).slice(0, n);
   for(const k of ['pylon','beam']){ const a = x[k]; if(!a || typeof a!=='object') continue;
     const arr = (v, fn) => Array.isArray(v) ? v.slice(0, 500).filter(q => q && typeof q==='object').map(fn) : [];
-    out[k] = {from: 'midas', at: S(a.at, 40), mct: S(a.mct), table: S(a.table), group: S(a.group), elems: S(a.elems, 400), units: S(a.units, 40),
+    out[k] = {from: a.from==='sap' ? 'sap' : 'midas', at: S(a.at, 40), mct: S(a.mct), table: S(a.table), group: S(a.group), elems: S(a.elems, 400), units: S(a.units, 40),
       kind: a.kind==='plate' ? 'plate' : 'beam', dir: a.dir==='y' ? 'y' : 'x',
       mode: a.mode==='all' ? 'all' : 'ctrl', swap: !!a.swap, sagPos: a.sagPos!==false, pd: S(a.pd), tb: S(a.tb, 300), key: S(a.key, 20000),
       rows: arr(a.rows, q => ({name: S(q.name), pos: S(q.pos, 8), tag: S(q.tag, 300)})),
@@ -5659,16 +5660,17 @@ function rpLoadSrc(mod){
   const stale = secvDiff(mod, a);
   const rows = a.rows.map(q => `<tr><td class="l">${nesc(q.name)}</td><td class="l">${q.pos==='top'?'頂':q.pos==='bot'?'底':'—'}</td><td class="l">${nesc(q.tag)}</td></tr>`).join('');
   return `<div class="rp-h3">內力來源</div>`
-    + `<div class="rp-note">本表載重組合由 Midas Civil 結果表格匯入（${nesc((a.at||'').replace('T',' ').slice(0,16))}）：內力表 <b>${nesc(a.table||'貼上')}</b>（單位 ${nesc(a.units)}，已換算為 tf、tf·m）`
+    + `<div class="rp-note">本表載重組合由 ${a.from==='sap' ? 'SAP2000' : 'Midas Civil'} 結果表格匯入（${nesc((a.at||'').replace('T',' ').slice(0,16))}）：內力表 <b>${nesc(a.table||'貼上')}</b>（單位 ${nesc(a.units)}，已換算為 tf、tf·m）`
     + `${a.mct ? `、模型 <b>${nesc(a.mct)}</b>` : ''}；構件 ${a.group ? `結構群組 <b>${nesc(a.group)}</b>、` : ''}元素 ${nesc(a.elems)}${a.tb ? `，${nesc(a.tb)}` : ''}。`
     + (a.kind==='plate' ? `版內力（Plate Force）取 ${a.dir} 向 Wood-Armer 設計彎矩 \\(M_{${a.dir}}^{*}=M_{${a.dir}${a.dir}}\\pm|M_{xy}|\\)（及其修正式），Midas 正 M 視為${a.sagPos?'下緣':'上緣'}受拉；剪力取 \\(|V_{${a.dir}${a.dir}}|\\)；每公尺版帶。`
+       : a.from==='sap' ? (mod==='beam' ? `SAP2000 正 M3 視為${a.sagPos?'下緣':'上緣'}受拉。` : `P_u = −P、M_ux = M3、M_uy = M2、V_uy = V2、V_ux = V3${a.swap?'（x、y 已對調）':''}。`)
        : mod==='beam' ? `Midas 正 M_y 視為${a.sagPos?'下緣':'上緣'}受拉。` : `P_u = −Axial、M_ux = Moment-y、M_uy = Moment-z、V_uy = Shear-z、V_ux = Shear-y${a.swap?'（x、y 已對調）':''}。`)
     + (a.mode==='all' ? '匯入全部勾選的組合，本計算書逐列驗算。' : '匯入方式為<b>極值篩選</b>：只列 P、M、V、T 各分量最大／最小所在的組合，本計算書逐列驗算這些列；未列入的組合仍可能控制，正式設計宜改用全部組合。')
     + (mod==='beam' ? '每一列是該組合在群組內各分量的最大值（<b>群組設計包絡</b>），M⁺、M⁻、V、T 可能來自不同位置，不是同時內力。' : '每一列是同一組合、同一端點的同時內力。')
     + `篩選依據：${ctrl}。${a.pd ? `靜載重軸力 P_D 取自載重 ${nesc(a.pd)}。` : ''}`
     + (edited ? ' <b>匯入後載重表已修改，以表內數值為準。</b>' : '')
     + (stale.length ? ` <b>斷面或材料已與匯入時不同（${stale.map(d => `${nesc(d.label)} ${nesc(d.was)} → ${nesc(d.now)}`).join('、')}），表中內力仍是舊分析的結果；若改變影響分析勁度、自重或材料，須回 Midas 重分析並重新匯入。</b>` : '') + `</div>`
-    + (rows ? `<table class="no-break"><thead><tr><th class="l">組合</th><th class="l">位置</th><th class="l">Midas 來源（元素-端點）</th></tr></thead><tbody>${rows}</tbody></table>` : '');
+    + (rows ? `<table class="no-break"><thead><tr><th class="l">組合</th><th class="l">位置</th><th class="l">${a.from==='sap' ? 'SAP2000' : 'Midas'} 來源（元素-端點）</th></tr></thead><tbody>${rows}</tbody></table>` : '');
 }
 /* 構件清單：每筆的 id、名稱、模組、時間轉成字串；快照內的載重列同樣清理 */
 function caseMembers(a){
@@ -6153,7 +6155,7 @@ function wbSteps(mod){
   const B = mod==='beam', M = B ? BMODEL : MODEL, a = LOADSRC && LOADSRC[mod], loads = B ? BLOADS : LOADS;
   const bad = WB.pills[mod].find(p => p.k==='不合格'), blocked = WB.pills[mod].find(p => p.k==='無法重算');
   const nPend = confPending(mod).length, nConf = CONF_ITEMS[mod].length;
-  const src = a ? {st: secvDiff(mod, a).length ? 'warn' : 'ok', t: `Midas：${a.mct || a.table || '貼上'}${MidasIO.loadsEdited(loads, a.key) ? '（已修改）' : ''}`}
+  const src = a ? {st: secvDiff(mod, a).length ? 'warn' : 'ok', t: `${a.from==='sap' ? 'SAP2000' : 'Midas'}：${a.mct || a.table || '貼上'}${MidasIO.loadsEdited(loads, a.key) ? '（已修改）' : ''}`}
     : {st: loads.length ? 'ok' : 'todo', t: loads.length ? `手動輸入 ${loads.length} 組` : '尚未輸入載重'};
   return [
     {k: '資料來源', ...src, go: 'loads'},
@@ -11122,10 +11124,11 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   async function readMct(file){
     if(!file) return;
     const txt = await file.text();
-    const m = MidasIO.parseMct(txt);
-    if(!m.counts.elems){ $('midMctInfo').innerHTML = SB(`<span style="color:var(--bad)">${E(file.name)} 沒有 *ELEMENT 資料，不是 Midas 模型檔？</span>`); ST.mct = null; ST.mctName = ''; refresh(); return; }
+    const sap = typeof SapIO !== 'undefined' && SapIO.isS2k(txt);
+    const m = sap ? SapIO.parseModel(txt) : MidasIO.parseMct(txt);
+    if(!m.counts.elems){ $('midMctInfo').innerHTML = SB(`<span style="color:var(--bad)">${E(file.name)} 沒有${sap ? ' CONNECTIVITY - FRAME' : ' *ELEMENT'} 資料，不是${sap ? ' SAP2000' : ' Midas'} 模型檔？</span>`); ST.mct = null; ST.mctName = ''; refresh(); return; }
     ST.mct = m; ST.mctName = file.name;   // 內力表讀完才收合（換模型檔時通常也要換內力表）
-    $('midMctInfo').innerHTML = SB(`${E(file.name)}：單位 ${m.unit ? E(m.unit.force + ', ' + m.unit.len) : '<b>未寫 *UNIT</b>'}，節點 ${m.counts.nodes}、元素 ${m.counts.elems}、結構群組 ${m.groups.length}、斷面 ${Object.keys(m.sects).length}`);
+    $('midMctInfo').innerHTML = SB(`${E(file.name)}${sap ? '（SAP2000）' : ''}：單位 ${m.unit ? E(m.unit.force + ', ' + m.unit.len) : `<b>未寫 ${sap ? 'CurrUnits' : '*UNIT'}</b>`}，節點 ${m.counts.nodes}、元素 ${m.counts.elems}、結構群組 ${m.groups.length}、斷面 ${Object.keys(m.sects).length}`);
     if(ST.tbl && !ST.tbl.ok && ST.tbl.needUnit) readTable();
     refresh();
   }
@@ -11143,7 +11146,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
   function readTable(){
     if(SRC == null) return;
     const fb = !$('midUnitRow').classList.contains('hidden') ? {force: $('midUF').value, len: $('midUL').value} : (ST.mct && ST.mct.unit) || null;
-    const t = MidasIO.parseAnyTable(SRC, fb);
+    const t = (typeof SapIO !== 'undefined' && SapIO.isSapTable(SRC)) ? SapIO.parseForceTable(SRC, fb) : MidasIO.parseAnyTable(SRC, fb);
     ST.tbl = t;
     ov.classList.toggle('k-plate', t.kind==='plate');
     const info = $('midTblInfo');
@@ -11153,7 +11156,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
     }else{
       const sk = t.skipped.length ? `；略過 ${t.skipped.length} 行（${t.skipped.slice(0, 5).map(q => `第 ${q.n} 行 ${E(q.why)}`).join('、')}${t.skipped.length > 5 ? '…' : ''}）` : '';
       const us = t.units.src.force==='header' && t.units.src.len==='header' ? '取自標題列' : '標題列沒有單位，採用' + (ST.mct && ST.mct.unit ? ' .mct 的 *UNIT' : '下拉選單');
-      info.innerHTML = SB(`${E(ST.tblName || '貼上的表格')}：${t.kind==='plate' ? '<b>版內力（Plate Force）</b>，' : ''}${t.rows.length} 列、元素 ${new Set(t.rows.map(r => r.elem)).size} 個、載重 ${t.loads.length} 個；單位 ${E(t.units.force)}, ${E(t.units.len)}（${us}）${sk}`
+      info.innerHTML = SB(`${E(ST.tblName || '貼上的表格')}：${t.prog==='sap' ? '<b>SAP2000</b>，' : ''}${t.kind==='plate' ? '<b>版內力（Plate Force）</b>，' : ''}${t.rows.length} 列、元素 ${new Set(t.rows.map(r => r.elem)).size} 個、載重 ${t.loads.length} 個；單位 ${E(t.units.force)}, ${E(t.units.len)}（${us}）${sk}`
         + t.warnings.map(w => `<br><span style="color:var(--warn,#b45309)">${E(w)}</span>`).join(''));
     }
     buildLoads(); refresh();
@@ -11238,7 +11241,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
       notes.push(`${ST.mod==='beam' ? '跨度 L' : 'l_u'} = ${Math.round(mi.length)} cm（中心線長，請改為淨長）`);
     }
     const name = mem.name;
-    const src = {from: 'midas', at: new Date().toISOString(), mct: ST.mctName, table: ST.tblName || '貼上', group: ST.mct ? mem.name : '',
+    const src = {from: ST.tbl.prog==='sap' ? 'sap' : 'midas', at: new Date().toISOString(), mct: ST.mctName, table: ST.tblName || '貼上', group: ST.mct ? mem.name : '',
       elems: idList(mem.elems), units: `${ST.tbl.units.force}, ${ST.tbl.units.len}`, mode: opts.all ? 'all' : 'ctrl',
       swap: ST.mod==='pylon' && $('midSwap').checked, sagPos: $('midSag').value==='1',
       pd: ST.mod==='pylon' && pdI !== '' && vals.brPD != null ? ST.tbl.loads[+pdI] : '',
@@ -11259,7 +11262,7 @@ document.querySelectorAll('svg[viewBox]').forEach(fitSvg);
       const mt = ST.mct.mats[mi.mats[0]], fc = mt && MidasIO.fcFromName(mt.name);
       if(fc){ vals.bfc = fc; notes.push(`f'_c = ${fc} kgf/cm²（材料「${E(mt.name)}」）`); }
     }
-    const src = {from: 'midas', kind: 'plate', dir, at: new Date().toISOString(), mct: ST.mctName, table: ST.tblName || '貼上', group: ST.mct ? mem.name : '',
+    const src = {from: ST.tbl.prog==='sap' ? 'sap' : 'midas', kind: 'plate', dir, at: new Date().toISOString(), mct: ST.mctName, table: ST.tblName || '貼上', group: ST.mct ? mem.name : '',
       elems: idList(mem.elems), units: `${ST.tbl.units.force}, ${ST.tbl.units.len}`, mode: opts.all ? 'all' : 'ctrl', swap: false, sagPos, pd: '', tb: '',
       rows: r.src, ctrl: r.ctrl, warn: r.warnings, key: MidasIO.loadsKey(r.loads), secv: secSnap(vals)};
     return {name: mem.name, loads: r.loads, ctrl: r.ctrl, warnings: r.warnings, vals, notes, src};

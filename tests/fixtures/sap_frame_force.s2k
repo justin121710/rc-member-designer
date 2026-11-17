@@ -1,0 +1,44 @@
+TABLE:  "PROGRAM CONTROL"
+   ProgramName=SAP2000   Version=24.0.0   CurrUnits="Tonf, m, C"
+
+TABLE:  "ELEMENT FORCES - FRAMES"
+   Frame=101   Station=0   OutputCase=DL   CaseType=LinStatic   P=-600   V2=0   V3=0   T=0   M2=0   M3=10   FrameElem=101   ElemStation=0
+   Frame=101   Station=4   OutputCase=DL   CaseType=LinStatic   P=-580   V2=0   V3=0   T=0   M2=0   M3=10   FrameElem=101   ElemStation=4
+   Frame=102   Station=0   OutputCase=DL   CaseType=LinStatic   P=-580   V2=0   V3=0   T=0   M2=0   M3=10   FrameElem=102   ElemStation=0
+   Frame=102   Station=4   OutputCase=DL   CaseType=LinStatic   P=-560   V2=0   V3=0   T=0   M2=0   M3=10   FrameElem=102   ElemStation=4
+   Frame=103   Station=0   OutputCase=DL   CaseType=LinStatic   P=-560   V2=0   V3=0   T=0   M2=0   M3=10   FrameElem=103   ElemStation=0
+   Frame=103   Station=4   OutputCase=DL   CaseType=LinStatic   P=-540   V2=0   V3=0   T=0   M2=0   M3=10   FrameElem=103   ElemStation=4
+   Frame=101   Station=0   OutputCase=cLCB1   CaseType=Combination   P=-780   V2=60   V3=5   T=1   M2=20   M3=-400   FrameElem=101   ElemStation=0
+   Frame=101   Station=4   OutputCase=cLCB1   CaseType=Combination   P=-770   V2=60   V3=5   T=1   M2=15   M3=-160   FrameElem=101   ElemStation=4
+   Frame=102   Station=0   OutputCase=cLCB1   CaseType=Combination   P=-770   V2=60   V3=5   T=1   M2=15   M3=-160   FrameElem=102   ElemStation=0
+   Frame=102   Station=4   OutputCase=cLCB1   CaseType=Combination   P=-760   V2=60   V3=5   T=1   M2=10   M3=80   FrameElem=102   ElemStation=4
+   Frame=103   Station=0   OutputCase=cLCB1   CaseType=Combination   P=-760   V2=60   V3=5   T=1   M2=10   M3=80   FrameElem=103   ElemStation=0
+   Frame=103   Station=4   OutputCase=cLCB1   CaseType=Combination   P=-750   V2=60   V3=5   T=1   M2=5   M3=250   FrameElem=103   ElemStation=4
+   Frame=101   Station=0   OutputCase=cLCB2   CaseType=Combination   P=-828   V2=-95   V3=12   T=3   M2=60   M3=-520   FrameElem=101   ElemStation=0
+   Frame=101   Station=4   OutputCase=cLCB2   CaseType=Combination   P=-826   V2=-95   V3=12   T=3   M2=50   M3=-140   FrameElem=101   ElemStation=4
+   Frame=102   Station=0   OutputCase=cLCB2   CaseType=Combination   P=-826   V2=-95   V3=12   T=3   M2=50   M3=-140   FrameElem=102   ElemStation=0
+   Frame=102   Station=4   OutputCase=cLCB2   CaseType=Combination   P=-830   V2=-95   V3=12   T=3   M2=45   M3=100   FrameElem=102   ElemStation=4
+   Frame=103   Station=0   OutputCase=cLCB2   CaseType=Combination   P=-825   V2=-95   V3=12   T=3   M2=45   M3=100   FrameElem=103   ElemStation=0
+   Frame=103   Station=4   OutputCase=cLCB2   CaseType=Combination   P=-820   V2=-95   V3=12   T=3   M2=40   M3=300   FrameElem=103   ElemStation=4
+   Frame=101   Station=0   OutputCase=cLCB3   CaseType=Combination   StepType=Max   P=-900   V2=100   V3=20   T=5   M2=80   M3=600   FrameElem=101   ElemStation=0
+   Frame=103   Station=4   OutputCase=cLCB3   CaseType=Combination   StepType=Max   P=-880   V2=100   V3=20   T=5   M2=80   M3=600   FrameElem=103   ElemStation=4
+   Frame=201   Station=0   OutputCase=DL   CaseType=LinStatic   P=0   V2=40   V3=0   T=1   M2=5   M3=-200   FrameElem=201   ElemStation=0
+   Frame=201   Station=2.5   OutputCase=DL   CaseType=LinStatic   P=0   V2=10   V3=0   T=1   M2=5   M3=60   FrameElem=201   ElemStation=2.5
+   Frame=201   Station=5   OutputCase=DL   CaseType=LinStatic   P=0   V2=-60   V3=0   T=1   M2=5   M3=-90   FrameElem=201   ElemStation=5
+   Frame=202   Station=0   OutputCase=DL   CaseType=LinStatic   P=0   V2=60   V3=0   T=1   M2=5   M3=-90   FrameElem=202   ElemStation=0
+   Frame=202   Station=2.5   OutputCase=DL   CaseType=LinStatic   P=0   V2=10   V3=0   T=1   M2=5   M3=50   FrameElem=202   ElemStation=2.5
+   Frame=202   Station=5   OutputCase=DL   CaseType=LinStatic   P=0   V2=-40   V3=0   T=1   M2=5   M3=-120   FrameElem=202   ElemStation=5
+   Frame=201   Station=0   OutputCase=cLCB1   CaseType=Combination   P=0   V2=210   V3=0   T=8   M2=100   M3=-480   FrameElem=201   ElemStation=0
+   Frame=201   Station=2.5   OutputCase=cLCB1   CaseType=Combination   P=0   V2=30   V3=0   T=8   M2=60   M3=150   FrameElem=201   ElemStation=2.5
+   Frame=201   Station=5   OutputCase=cLCB1   CaseType=Combination   P=0   V2=-100   V3=0   T=8   M2=20   M3=-200   FrameElem=201   ElemStation=5
+   Frame=202   Station=0   OutputCase=cLCB1   CaseType=Combination   P=0   V2=100   V3=0   T=-6   M2=20   M3=-200   FrameElem=202   ElemStation=0
+   Frame=202   Station=2.5   OutputCase=cLCB1   CaseType=Combination   P=0   V2=20   V3=0   T=-6   M2=30   M3=120   FrameElem=202   ElemStation=2.5
+   Frame=202   Station=5   OutputCase=cLCB1   CaseType=Combination   P=0   V2=-150   V3=0   T=-6   M2=40   M3=-300   FrameElem=202   ElemStation=5
+   Frame=201   Station=0   OutputCase=cLCB2   CaseType=Combination   P=0   V2=180   V3=0   T=5   M2=30   M3=-450   FrameElem=201   ElemStation=0
+   Frame=201   Station=2.5   OutputCase=cLCB2   CaseType=Combination   P=0   V2=25   V3=0   T=5   M2=30   M3=140   FrameElem=201   ElemStation=2.5
+   Frame=201   Station=5   OutputCase=cLCB2   CaseType=Combination   P=0   V2=-90   V3=0   T=5   M2=30   M3=-180   FrameElem=201   ElemStation=5
+   Frame=202   Station=0   OutputCase=cLCB2   CaseType=Combination   P=0   V2=90   V3=0   T=-5   M2=30   M3=-180   FrameElem=202   ElemStation=0
+   Frame=202   Station=2.5   OutputCase=cLCB2   CaseType=Combination   P=0   V2=25   V3=0   T=-5   M2=30   M3=110   FrameElem=202   ElemStation=2.5
+   Frame=202   Station=5   OutputCase=cLCB2   CaseType=Combination   P=0   V2=-220   V3=0   T=-5   M2=30   M3=-260   FrameElem=202   ElemStation=5
+
+END TABLE DATA

@@ -1,0 +1,46 @@
+File sap_pier.s2k  測試用最小模型（tests/sap.test.js）：與 midas_pier.mct 相同的 P1 墩柱、帽梁
+
+TABLE:  "PROGRAM CONTROL"
+   ProgramName=SAP2000   Version=24.0.0   CurrUnits="Tonf, m, C"
+
+TABLE:  "MATERIAL PROPERTIES 01 - GENERAL"
+   Material=C350   Type=Concrete   SymType=Isotropic
+
+TABLE:  "FRAME PROPS 01 - GENERAL"
+   SectionName=COL   Material=C350   Shape=Rectangular   t3=2.4   t2=1.8
+   SectionName=CAP   Material=C350   Shape=Rectangular   t3=2   t2=2.2
+   SectionName=PILE   Material=C350   Shape=Circle   t3=1.5
+   SectionName=BOX   Material=C350   Shape=Box/Tube   t3=3   t2=2   tf=0.5   tw=0.4
+
+TABLE:  "JOINT COORDINATES"
+   Joint=1   CoordSys=GLOBAL   CoordType=Cartesian   XorR=0   Y=0   Z=0   GlobalX=0   GlobalY=0   GlobalZ=0
+   Joint=2   CoordSys=GLOBAL   CoordType=Cartesian   XorR=0   Y=0   Z=4   GlobalX=0   GlobalY=0   GlobalZ=4
+   Joint=3   CoordSys=GLOBAL   CoordType=Cartesian   XorR=0   Y=0   Z=8   GlobalX=0   GlobalY=0   GlobalZ=8
+   Joint=4   CoordSys=GLOBAL   CoordType=Cartesian   XorR=0   Y=0   Z=12   GlobalX=0   GlobalY=0   GlobalZ=12
+   Joint=5   CoordSys=GLOBAL   CoordType=Cartesian   XorR=-5   Y=0   Z=12   GlobalX=-5   GlobalY=0   GlobalZ=12
+   Joint=6   CoordSys=GLOBAL   CoordType=Cartesian   XorR=5   Y=0   Z=12   GlobalX=5   GlobalY=0   GlobalZ=12
+
+TABLE:  "CONNECTIVITY - FRAME"
+   Frame=101   JointI=1   JointJ=2   IsCurved=No
+   Frame=102   JointI=2   JointJ=3   IsCurved=No
+   Frame=103   JointI=3   JointJ=4   IsCurved=No
+   Frame=201   JointI=5   JointJ=4   IsCurved=No
+   Frame=202   JointI=4   JointJ=6   IsCurved=No
+
+TABLE:  "FRAME SECTION ASSIGNMENTS"
+   Frame=101   SectionType=Rectangular   AutoSelect=N.A.   AnalSect=COL   MatProp=Default
+   Frame=102   SectionType=Rectangular   AutoSelect=N.A.   AnalSect=COL   MatProp=Default
+   Frame=103   SectionType=Rectangular   AutoSelect=N.A.   AnalSect=COL   MatProp=Default
+   Frame=201   SectionType=Rectangular   AutoSelect=N.A.   AnalSect=CAP   MatProp=Default
+   Frame=202   SectionType=Rectangular   AutoSelect=N.A.   AnalSect=CAP   MatProp=Default
+
+TABLE:  "GROUPS 2 - ASSIGNMENTS"
+   GroupName=All   ObjectType=Frame   ObjectLabel=101
+   GroupName=P1_COL   ObjectType=Frame   ObjectLabel=101
+   GroupName=P1_COL   ObjectType=Frame   ObjectLabel=102
+   GroupName=P1_COL   ObjectType=Frame   ObjectLabel=103
+   GroupName=P1_COL   ObjectType=Joint   ObjectLabel=1
+   GroupName=P1_CAP   ObjectType=Frame   ObjectLabel=201
+   GroupName=P1_CAP   ObjectType=Frame   ObjectLabel=202
+
+END TABLE DATA

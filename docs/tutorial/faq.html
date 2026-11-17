@@ -154,7 +154,8 @@ pre { font-family: "DejaVu Sans Mono", "WenQuanYi Zen Hei Mono", monospace; font
   <li>計算書載重表後會列「內力來源」：每列來自哪個元素哪一端、依哪個分量篩選；斷面或材料與匯入時不同時，會提示可能需回 Midas 重分析。</li>
   <li>視窗標題列標出 ① 提供資料 → ② 確認對應 → ③ 建立構件；資料讀好後收成一行摘要，底部寫明「套用」會覆寫什麼、「建立」會新增或更新哪些構件。第一次用可按「用 P1 墩柱範例」。</li></ul>
   <figure class="half"><img src="img/08c-midas-prev.png"><figcaption>圖 8b　匯入預覽：<span class="n">1</span> 已讀資料摘要、<span class="n">2</span> 結構群組、<span class="n">3</span> 載重勾選、<span class="n">4</span> 預覽、<span class="n">5</span> 按下去會改什麼</figcaption></figure>
-  <p>表格欄位與正負號依公開資料實作，第一次使用請拿一根構件與 Midas 結果對照。</p></div>
+  <p>表格欄位與正負號依公開資料實作，第一次使用請拿一根構件與 Midas 結果對照。</p>
+  <p><b>SAP2000</b> 也可以：Element Forces - Frames 表格（含單位列）加 .s2k 模型檔，\(P_u = -P\)、\(M_{ux}\) ← M3、\(M_{uy}\) ← M2；局部軸 2、3 與斷面 H、B 對不上時勾 x／y 對調。</p></div>
 
   <div class="q"><h3>Q8. 載重全部填好了，為什麼控制剪力的組合不是 \(V_u\) 最大的那組？</h3>
   <p>因為 \(V_c\) 隨軸力 \(N_u\) 改變；在塑鉸區軸壓低於門檻時 \(V_c=0\)（建築柱依 §18.4.6.2.1 須同時滿足 (a) 地震引致剪力 \(V_e\ge\tfrac12V_{des}\) 與 (b) \(P_u<A_gf'_c/20\)；非地震剪力控制之柱保留 \(V_c\)，亦可改選「僅依軸力」之保守作法）。低軸壓（或軸拉）組合常常需要最多箍筋。工具會<b>逐組合各算一次</b>，以強度需求間距最小者為控制組合，並在「結果摘要」與計算書列出逐組合明細（圖 8 <span class="n">1</span>）。梁也一樣逐組合檢核：扭矩常不與最大剪力同組出現，只看 \(V_u\) 最大的組合會漏掉扭矩。</p>

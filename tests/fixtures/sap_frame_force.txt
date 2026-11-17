@@ -1,0 +1,41 @@
+TABLE:  Element Forces - Frames
+Frame	Station	OutputCase	CaseType	StepType	P	V2	V3	T	M2	M3	FrameElem	ElemStation
+Text	m	Text	Text	Text	Tonf	Tonf	Tonf	Tonf-m	Tonf-m	Tonf-m	Text	m
+101	0	DL	LinStatic		-600	0	0	0	0	10	101	0
+101	4	DL	LinStatic		-580	0	0	0	0	10	101	4
+102	0	DL	LinStatic		-580	0	0	0	0	10	102	0
+102	4	DL	LinStatic		-560	0	0	0	0	10	102	4
+103	0	DL	LinStatic		-560	0	0	0	0	10	103	0
+103	4	DL	LinStatic		-540	0	0	0	0	10	103	4
+101	0	cLCB1	Combination		-780	60	5	1	20	-400	101	0
+101	4	cLCB1	Combination		-770	60	5	1	15	-160	101	4
+102	0	cLCB1	Combination		-770	60	5	1	15	-160	102	0
+102	4	cLCB1	Combination		-760	60	5	1	10	80	102	4
+103	0	cLCB1	Combination		-760	60	5	1	10	80	103	0
+103	4	cLCB1	Combination		-750	60	5	1	5	250	103	4
+101	0	cLCB2	Combination		-828	-95	12	3	60	-520	101	0
+101	4	cLCB2	Combination		-826	-95	12	3	50	-140	101	4
+102	0	cLCB2	Combination		-826	-95	12	3	50	-140	102	0
+102	4	cLCB2	Combination		-830	-95	12	3	45	100	102	4
+103	0	cLCB2	Combination		-825	-95	12	3	45	100	103	0
+103	4	cLCB2	Combination		-820	-95	12	3	40	300	103	4
+101	0	cLCB3	Combination	Max	-900	100	20	5	80	600	101	0
+103	4	cLCB3	Combination	Max	-880	100	20	5	80	600	103	4
+201	0	DL	LinStatic		0	40	0	1	5	-200	201	0
+201	2.5	DL	LinStatic		0	10	0	1	5	60	201	2.5
+201	5	DL	LinStatic		0	-60	0	1	5	-90	201	5
+202	0	DL	LinStatic		0	60	0	1	5	-90	202	0
+202	2.5	DL	LinStatic		0	10	0	1	5	50	202	2.5
+202	5	DL	LinStatic		0	-40	0	1	5	-120	202	5
+201	0	cLCB1	Combination		0	210	0	8	100	-480	201	0
+201	2.5	cLCB1	Combination		0	30	0	8	60	150	201	2.5
+201	5	cLCB1	Combination		0	-100	0	8	20	-200	201	5
+202	0	cLCB1	Combination		0	100	0	-6	20	-200	202	0
+202	2.5	cLCB1	Combination		0	20	0	-6	30	120	202	2.5
+202	5	cLCB1	Combination		0	-150	0	-6	40	-300	202	5
+201	0	cLCB2	Combination		0	180	0	5	30	-450	201	0
+201	2.5	cLCB2	Combination		0	25	0	5	30	140	201	2.5
+201	5	cLCB2	Combination		0	-90	0	5	30	-180	201	5
+202	0	cLCB2	Combination		0	90	0	-5	30	-180	202	0
+202	2.5	cLCB2	Combination		0	25	0	-5	30	110	202	2.5
+202	5	cLCB2	Combination		0	-220	0	-5	30	-260	202	5

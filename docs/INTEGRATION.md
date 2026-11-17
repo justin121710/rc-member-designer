@@ -169,6 +169,17 @@
 
 使用者提供實機檔案後：補測試案例、修正假設、刪除本表對應列。
 
+**SAP2000（§8）**：
+
+| 編號 | 項目 | 目前假設 |
+|---|---|---|
+| S1 | Element Forces - Frames 表格欄名 | `Frame, Station, OutputCase, CaseType, StepType, P, V2, V3, T, M2, M3`；標題下一列為單位列（`Text, m, …, KN, KN-m`） |
+| S2 | .s2k 文字格式 | `TABLE:  "ELEMENT FORCES - FRAMES"` 後每行 `Key=Value`；`PROGRAM CONTROL` 的 `CurrUnits="KN, m, C"` |
+| S3 | 包絡組合與反應譜的 StepType | Max／Min 各一列；反應譜（CaseType LinRespSpec）只有 Max |
+| S4 | 水平梁正 M3 | 下緣受拉（局部 2 軸向上的預設）；介面可切換 |
+| S5 | 柱的 M2／M3 與斷面 B、H 對應 | M3 配 V2（繞局部 3 軸、深度沿 t3＝H）；局部軸轉 90° 時勾 x／y 對調 |
+| S6 | 模型檔表格 | `JOINT COORDINATES`（GlobalX/Y/Z）、`CONNECTIVITY - FRAME`、`FRAME SECTION ASSIGNMENTS`（AnalSect）、`FRAME PROPS 01 - GENERAL`（Shape、t3、t2、tf、tw）、`GROUPS 2 - ASSIGNMENTS` |
+
 ## 7. 流程與操作改善評估（2026-11-07，依「四專案整合與操作流程改善分析」討論版）
 
 採納原則：維持各工具獨立、以本檔的交換契約銜接；先修會造成誤判的地方（P0），再減少操作負擔。
@@ -195,3 +206,16 @@
    一致性靠資料夾結構、檔名（§3.6）、專案狀態表與輸入雜湊。規則、流程、權限與送審前檢核見 [TEAM_FOLDER.md](TEAM_FOLDER.md)，
    範本（資料夾＋`專案狀態表.xlsx`）由 `docs/team-folder/build.js` 產生於 `docs/team-folder/範本/`。
    未採用：B 共用網頁＋伺服器存檔、C 版本控制（團隊變大、需要自動鎖定或線上共同編輯時再評估）。
+
+## 8. SAP2000 匯入（2026-11-17）
+
+公司計算書有一部分是 SAP2000 分析，「從 Midas 匯入」視窗同時接受 SAP2000 的檔案（`core/sap-io.js`，測試 `tests/sap.test.js`）：
+
+- **內力表**：SAP2000 Display > Show Tables > Element Forces - Frames，表格全選複製（含標題列與單位列）、匯出 Excel／.txt，或 .s2k 文字；自動辨識（標題含 Frame、OutputCase）。
+- **模型檔**：File > Export > SAP2000 .s2k Text File。群組（GROUPS 2 - ASSIGNMENTS，略過 All）、節點座標、Frame 連接、斷面（Rectangular → 實心、Circle → 圓形、Box/Tube → 箱型）、材料名稱。
+- **欄位對應**：N = P、V_z = V2、V_y = V3、T = T、M_y = M3、M_z = M2，之後與 Midas 共用控制組合挑選；柱 `P_u = −P、M_ux = M3、M_uy = M2、V_uy = V2、V_ux = V3`。
+- **位置**：Station 最小者為 I 端、最大者為 J 端，其餘為中間點（Part 欄記 Station 值）。非數字的 Frame／Joint 標籤（B12）轉成 9 億起的內部編號，計算書顯示原標籤。
+- **載重名稱**：組合照原名；Max／Min 加 `(max)`／`(min)`（包絡）；單一工況加 Midas 的後綴（LinStatic `(ST)`、LinRespSpec `(RS)`、時間歷程 `(TH)`、移動載重 `(MV)`、施工階段 `(CS)`），預設不勾選的規則因此與 Midas 相同。
+- **內力來源**：`loadsrc.from = 'sap'`；計算書寫「由 SAP2000 結果表格匯入」、欄位對應改為 P／M3／M2。StructAudit-AI `utils/calcbook.py` 同步辨識。
+- 測試：`fixtures/sap_*.{txt,s2k}` 由 Midas 的 P1 範例逐列轉換，柱與梁的控制組合、內力必須和 Midas 版完全相同。
+

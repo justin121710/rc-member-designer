@@ -264,7 +264,7 @@ const MidasIO = (() => {
     if(!e || !e.i) return null;
     return r.end === 'I' ? e.i : r.end === 'J' ? e.j : null;
   }
-  const rowTag = r => `E${r.elem}-${r.end === 'M' ? r.part || r.frac : r.end}`;
+  const rowTag = r => `${r.label ? r.label : 'E' + r.elem}-${r.end === 'M' ? r.part || r.frac : r.end}`;   // label：SAP2000 的非數字 Frame 標籤
 
   /* ---------- 柱（墩柱、橋塔、基樁） ----------
      opts: {loads:[勾選的載重], swap:false（x／y 對調）, all:false（輸出全部組合而非控制組合）}
