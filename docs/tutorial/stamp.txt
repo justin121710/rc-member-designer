@@ -1,10 +1,10 @@
-5774dbae8ebcb33929ba2c13070857903478c823  index.html
+55828b89bdc131264e998d7fcd18c17bab9fe4a1  index.html
 5bf08fe41ca611082ceda06ea2080a65d7b387f8  calc-xlsx.js
-44cfc0d0907867bbda68b8a384cbfc44e363daaf  docs/tutorial/tutorial.html
-91c6e5c067d9dda7f9eb9b8a75a1b1810e35859e  docs/tutorial/faq.html
+6c37767df3203bdedc9f35e87157f006644ec8c0  docs/tutorial/tutorial.html
+b1753a30b7a8fa44c2a2d561938244f48c0612b5  docs/tutorial/faq.html
 82de356a113e3edd8335749a37b3c3aa102b5155  docs/tutorial/build.js
 e05bd6c20a0d6200855a2ba67c7a4bcc70f1339c  docs/tutorial/inputs.txt
 5f4c9b5b72c3e9a604b65b9dec7d08725082879b  core/rc-core.js
-f1a737f3ed4b2dd493e12f760bf7c83ef342fd45  core/midas-io.js
+b8fb2080a766264f591785496e318a65ecb157a9  core/midas-io.js
 288a3e8c73b06fae97c78b1be03a8dc8631fe05b  tests/fixtures/midas_pier.mct
 74f407ab46878d14b87029fef186a93ae4665ee5  tests/fixtures/midas_beam_force.txt
