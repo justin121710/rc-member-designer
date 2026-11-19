@@ -99,6 +99,26 @@ test('柱：正負號、頂底配對、控制組合、包絡排除', () => {
   assert.equal(M.deadAxial(t, [101, 102, 103], m, 'DL'), 600);
 });
 
+test('柱：全部組合列出每個站位（控制列不一定是分量極值所在；書稿審查 RC-07）', () => {
+  const m = M.parseMct(MCT), t = M.parseForceTable(TBL);
+  const a = M.columnLoads(t, [101, 102, 103], m, {loads: ['cLCB1', 'cLCB2'], all: true});
+  // 每組合：頂、底＋中間節點（同節點兩側內力相同時只列一次）
+  assert.ok(a.loads.some(l => l.name === 'cLCB1 @E101-J'), '非極值的中間站位也要列');
+  assert.ok(!a.loads.some(l => l.name === 'cLCB1 @E102-I'), '同節點同內力不重複');
+  assert.equal(a.loads.filter(l => l.name.startsWith('cLCB1')).length, 4);
+  // 人造反例：E102 中點 Pu、Mu 都不是分量極值，卻是控制列（審查報告的 1632／2396）
+  const H = 'Elem\tLoad\tPart\tAxial (tonf)\tShear-y (tonf)\tShear-z (tonf)\tTorsion (tonf*m)\tMoment-y (tonf*m)\tMoment-z (tonf*m)';
+  const R = [[101, 'I[1]', 2800, 100], [101, 'J[2]', 1100, 500], [102, 'I[2]', 1100, 500], [102, '1/2', 1632, 2396],
+             [102, 'J[3]', 2025, 2410], [103, 'I[3]', 2025, 2410], [103, 'J[4]', 2025, 2410]]
+    .map(([e, p, P, My]) => [e, 'U1', p, -P, 0, 0, 0, My, 0].join('\t'));
+  const u = M.parseForceTable([H, ...R].join('\n'));
+  assert.ok(u.ok, u.why);
+  const sel = M.columnLoads(u, [101, 102, 103], m, {loads: ['U1']}), all = M.columnLoads(u, [101, 102, 103], m, {loads: ['U1'], all: true});
+  const has = (r, tag) => r.loads.some(l => l.name === 'U1 @' + tag);
+  assert.ok(!has(sel, 'E102-1/2'), '極值篩選不保證列出');
+  assert.ok(has(all, 'E102-1/2'), '全部組合必須列出中間站位');
+});
+
 test('反應譜工況 (RS)：辨識、警告、預設不勾選（《應用工程實例》實例 19）', () => {
   assert.equal(M.isRS('EQX(RS)'), true); assert.equal(M.isRS('eqy (rs) '), true);
   assert.equal(M.isRS('cLCB1'), false); assert.equal(M.isRS('RSX'), false); assert.equal(M.isEnvelope('EQX(RS)'), false);
@@ -192,4 +212,10 @@ test('版：x、y 向 Wood-Armer 控制組合與膜力警示', () => {
   assert.deepEqual([y.loads[0].Mpos, y.loads[0].Mneg, y.loads[0].Vu], [12, 5.9, 3]);
   const f = M.slabLoads(t, [301, 302], m, {dir: 'x', loads: ['cLCB1'], sagPos: false});
   assert.ok(f.loads[0].Mpos !== 11.8, '正負號切換');
+  // 只有面內剪力 F_xy 時也要警示（書稿審查 RC-08）
+  const lines = PTBL.split(/\r?\n/), hd = lines[0].split('\t');
+  const iF = hd.findIndex(h => /^fxx/i.test(h)), iY = hd.findIndex(h => /^fyy/i.test(h)), iS = hd.findIndex(h => /^fxy/i.test(h));
+  const only = [lines[0], ...lines.slice(1).filter(Boolean).map(l => { const c = l.split('\t'); if(/^\d/.test(c[0])){ c[iF] = 0; c[iY] = 0; c[iS] = 25; } return c.join('\t'); })].join('\n');
+  const s = M.slabLoads(M.parsePlateTable(only), [301, 302], m, {dir: 'x'});
+  assert.ok(s.warnings.some(w => /膜力 F_xy/.test(w)), '單獨 F_xy 要有膜力警示');
 });

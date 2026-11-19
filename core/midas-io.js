@@ -309,8 +309,17 @@ const MidasIO = (() => {
       if(t) push(t, l, 'top');
       if(b) push(b, l, 'bot');
       if(!t || !b) warnings.push(`組合 ${l} 缺少構件${!t ? '頂' : '底'}端的資料列。`);
-      // 控制點在構件中間：另列
-      for(const c of crit) if(c.x.r.load === l && c.x !== t && c.x !== b && !out.some(o => o.name === `${l} @${rowTag(c.x.r)}`)) push(c.x, `${l} @${rowTag(c.x.r)}`, '');
+      // 中間站位：全部組合時每一站位都列（控制列不一定是分量極值所在，2026-11-19 書稿審查 RC-07）；
+      // 極值篩選時只列分量極值所在的中間站位。同一節點兩側（E101-J 與 E102-I）內力相同時只列一次
+      const mid = opts.all ? rows.filter(x => x.r.load === l) : crit.filter(c => c.x.r.load === l).map(c => c.x);
+      const seen = new Set([t, b].filter(Boolean).map(x => (rowNode(x.r, mct) ?? rowTag(x.r)) + JSON.stringify(Object.values(x.f).map(r3))));
+      for(const x of mid){
+        if(x === t || x === b || out.some(o => o.name === `${l} @${rowTag(x.r)}`)) continue;
+        const key = (rowNode(x.r, mct) ?? rowTag(x.r)) + JSON.stringify(Object.values(x.f).map(r3));
+        if(seen.has(key)) continue;
+        seen.add(key);
+        push(x, `${l} @${rowTag(x.r)}`, '');
+      }
     }
     const ctrl = crit.map(c => ({why: c.why, load: c.x.r.load, tag: rowTag(c.x.r), v: r3(c.v)}));
     if(mi.known && mi.sects.length > 1) warnings.push(`群組內有 ${mi.sects.length} 種斷面（${mi.sects.join('、')}），本工具以單一斷面設計，變斷面請分段建立構件。`);
@@ -457,7 +466,7 @@ const MidasIO = (() => {
     const set = new Set(elemIds), sel = new Set(opts.loads || table.loads.filter(l => !isEnvelope(l) && !isRS(l)));
     const s = opts.sagPos === false ? -1 : 1, Y = opts.dir === 'y';
     const per = new Map();
-    let fMax = 0, fTag = '';
+    let fMax = 0, fTag = '', fCmp = '';
     for(const r of table.rows){
       if(!set.has(r.elem) || !sel.has(r.load)) continue;
       let a = per.get(r.load);
@@ -467,8 +476,9 @@ const MidasIO = (() => {
       if(mp > a.Mpos){ a.Mpos = mp; a.at.Mpos = tag; }
       if(mn > a.Mneg){ a.Mneg = mn; a.at.Mneg = tag; }
       if(v > a.Vu){ a.Vu = v; a.at.Vu = tag; }
-      const f = Math.abs(Y ? r.Fyy : r.Fxx);
-      if(f > fMax){ fMax = f; fTag = `${r.load} ${tag}`; }
+      // 膜力：配筋方向的正向膜力與面內剪力 F_xy 都要看（只有 F_xy 時舊版不警示，書稿審查 RC-08）
+      for(const [c, f] of [[Y ? 'F_yy' : 'F_xx', Math.abs(Y ? r.Fyy : r.Fxx)], ['F_xy', Math.abs(r.Fxy || 0)]])
+        if(f > fMax){ fMax = f; fTag = `${r.load} ${tag}`; fCmp = c; }
     }
     const all = table.loads.filter(l => per.has(l)).map(l => per.get(l));
     const warnings = [];
@@ -481,7 +491,7 @@ const MidasIO = (() => {
     const pick = opts.all ? all : all.filter(a => crit.some(c => c.load === a.name));
     const out = pick.map(a => ({name: a.name, Mpos: r3(a.Mpos), Mneg: r3(a.Mneg), Vu: r3(a.Vu), Tu: 0}));
     const src = pick.map(a => ({name: a.name, pos: '', tag: ['Mpos', 'Mneg', 'Vu'].filter(k => a.at[k]).map(k => `${k} ${a.at[k]}`).join('；')}));
-    if(fMax > 1) warnings.push(`版有膜力 ${Y ? 'F_yy' : 'F_xx'} 達 ${r3(fMax)} tf/m（${fTag}），版模組不計軸力，請另行檢核（例如以柱模組單位寬檢核）。`);
+    if(fMax > 1) warnings.push(`版有膜力 ${fCmp} 達 ${r3(fMax)} tf/m（${fTag}），版模組不計膜力，請另行檢核（例如以柱模組單位寬檢核；F_xy 依膜力與彎矩互制或殼構件力流檢核）。`);
     const mi = plateInfo(elemIds, mct);
     if(mi.known && mi.thks.length > 1) warnings.push(`群組內有 ${mi.thks.length} 種厚度，本工具以單一厚度設計，請分區建立構件。`);
     if(!mi.known && mct) warnings.push('.mct 中找不到這些版元素（PLATE），無法讀取厚度。');
