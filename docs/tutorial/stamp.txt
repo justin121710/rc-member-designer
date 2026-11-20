@@ -5,6 +5,6 @@ d855e5185e40bfd1be12b87782869376723cd840  index.html
 82de356a113e3edd8335749a37b3c3aa102b5155  docs/tutorial/build.js
 e05bd6c20a0d6200855a2ba67c7a4bcc70f1339c  docs/tutorial/inputs.txt
 5f4c9b5b72c3e9a604b65b9dec7d08725082879b  core/rc-core.js
-a2d765011ba5bc80a570daa1ca467f3151aad834  core/midas-io.js
+48d17f7f68eae89e30eb1a6cd00d5ba8b6a6066b  core/midas-io.js
 288a3e8c73b06fae97c78b1be03a8dc8631fe05b  tests/fixtures/midas_pier.mct
 74f407ab46878d14b87029fef186a93ae4665ee5  tests/fixtures/midas_beam_force.txt
