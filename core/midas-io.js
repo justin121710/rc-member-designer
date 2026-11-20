@@ -97,11 +97,16 @@ const MidasIO = (() => {
       }else if(cur === 'SECTION'){
         if(id > 0) out.sects[id] = parseSection(f);
       }else if(cur === 'THICKNESS'){
-        // iTHK, TYPE, bSAME, THIK-IN, THIK-OUT, ...（TYPE＝VALUE）：取 TYPE 之後第一個正數為厚度
-        // 版本間欄位略有不同（有的在 bSAME 前多一個整數欄）：有 YES／NO 時取其後第一個正數
-        if(id > 0 && /^VALUE$/i.test(f[1] || '')){
-          const yn = f.findIndex((v, k) => k > 1 && /^(YES|NO)$/i.test(v));
-          const t = f.slice(yn > 0 ? yn + 1 : 2).map(num).find(v => v > 0); if(t) out.thick[id] = t; }
+        // TYPE＝VALUE 的兩種寫法：iTHK, TYPE, bSAME, THIK-IN, THIK-OUT（手冊 Quick Reference）
+        // 與 iTHK, NAME, TYPE, bSAME, THIK-IN, THIK-OUT, bOFFSET, OFFTYPE, VALUE（Civil 2020 v1.1 起的 Command Update）；
+        // 另有在 bSAME 前多一個整數欄者。bSAME＝YES 取 THIK-IN；NO 時版的撓曲用面外厚 THIK-OUT（為 0 才退回 THIK-IN）
+        const tk = [1, 2].find(k => /^VALUE$/i.test((f[k] || '').trim()));
+        if(id > 0 && tk){
+          const yn = f.findIndex((v, k) => k > tk && /^(YES|NO)$/i.test((v || '').trim()));
+          const vals = f.slice(yn > 0 ? yn + 1 : tk + 1).map(num);
+          const tin = vals.find(v => v > 0);
+          const tout = yn > 0 && /^NO$/i.test(f[yn].trim()) ? num(f[yn + 2]) : 0;
+          const t = tout > 0 ? tout : tin; if(t) out.thick[id] = t; }
       }else if(cur === 'MATERIAL'){
         if(id > 0) out.mats[id] = {type: (f[1] || '').toUpperCase(), name: (f[2] || '').trim()};
       }else if(cur === 'GROUP'){

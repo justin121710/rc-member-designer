@@ -165,7 +165,7 @@
 | V7 | Rebar Input 的 MCT 語法 | 未知（M3 前需要範例） |
 | V8 | Plate Force 表格標題（Elem、Load、Node、Fxx…Vyy）與單位寫法（tonf*m/m） | 依標題名稱辨識；彎矩每公尺版帶＝數值 × 力單位，與長度單位無關 |
 | V9 | 版彎矩 Mxx 正負號 | 正值＝下緣（−z 側）受拉；介面可切換 |
-| V10 | `*THICKNESS` 欄位 | `iTHK, VALUE, [整數], YES/NO, THIK-IN, ...`：取 YES／NO 之後第一個正數 |
+| V10 | `*THICKNESS` 欄位 | 兩種寫法都接受：`iTHK, VALUE, [整數], YES/NO, THIK-IN, THIK-OUT`（Quick Reference）與 `iTHK, NAME, VALUE, bSAME, THIK-IN, THIK-OUT, bOFFSET, OFFTYPE, VALUE`（手冊 9.1.0 MCT Command Update，Civil 2020 v1.1 起）。bSAME＝YES 取 THIK-IN；NO 時取面外厚 THIK-OUT（版的撓曲用），為 0 才退回 THIK-IN |
 
 使用者提供實機檔案後：補測試案例、修正假設、刪除本表對應列。
 

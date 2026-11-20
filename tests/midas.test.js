@@ -200,6 +200,14 @@ test('MCT：版元素與厚度', () => {
   const pi = M.plateInfo([301, 302], m); near(pi.thickness, 30, 1e-9, '厚度 cm');
 });
 
+test('MCT：*THICKNESS 含名稱欄（Civil 2020 v1.1 起）與面內／面外不同厚', () => {
+  const m = M.parseMct('*UNIT\n   TONF, M, KCAL, C\n*THICKNESS\n'
+    + '   1, SLAB25, VALUE, YES, 0.25, 0, NO, 0, 0\n'
+    + '   2, WALL, VALUE, NO, 0.40, 0.30, NO, 0, 0\n'
+    + '   3, VALUE, YES, 0.20, 0\n');
+  assert.equal(m.thick[1], 0.25); assert.equal(m.thick[2], 0.30, '面外厚 THIK-OUT'); assert.equal(m.thick[3], 0.20);
+});
+
 test('版：x、y 向 Wood-Armer 控制組合與膜力警示', () => {
   const m = M.parseMct(SMCT), t = M.parsePlateTable(PTBL);
   const x = M.slabLoads(t, [301, 302], m, {dir: 'x'});
